@@ -1,5 +1,7 @@
 "use client";
 import React from "react";
+import { useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -34,6 +36,13 @@ import {
   Clock,
   StickyNote,
 } from "lucide-react";
+import { orderHistory } from "@/components/OrderData";
+import {
+  createOrder,
+  findAllOrders,
+  completeOrder,
+  selectAllOrders,
+} from "@/store/reducers/orderSlice";
 
 const SIGNATURE_LATTES = [
   "The BP.HAM",
@@ -79,152 +88,17 @@ const getCategoryColor = (category) => {
   }
 };
 
-const orderHistory = [
-  {
-    id: 1,
-    customerName: "Alice Johnson",
-    items: [
-      {
-        name: "The BP.HAM",
-        quantity: 2,
-        price: 5.99,
-        milkOption: "Whole Milk",
-        temperature: "Hot",
-      },
-      {
-        name: "XO",
-        quantity: 1,
-        price: 5.99,
-        milkOption: "Oat Milk",
-        temperature: "Cold",
-      },
-    ],
-    status: "pending",
-    createdAt: new Date(Date.now() - 1000 * 60 * 15), // 15 minutes ago
-    notes: "Extra hot, please!",
-  },
-  {
-    id: 2,
-    customerName: "Bob Smith",
-    items: [
-      {
-        name: "Heritage",
-        quantity: 1,
-        price: 5.99,
-        milkOption: "Whole Milk",
-        temperature: "Hot",
-      },
-      {
-        name: "Posh",
-        quantity: 1,
-        price: 5.99,
-        milkOption: "Oat Milk",
-        temperature: "Cold",
-      },
-    ],
-    status: "pending",
-    createdAt: new Date(Date.now() - 1000 * 60 * 5), // 5 minutes ago
-    notes: "No sugar in the Heritage",
-  },
-  {
-    id: 3,
-    customerName: "Charlie Brown",
-    items: [
-      {
-        name: "Flower Power",
-        quantity: 3,
-        price: 5.99,
-        milkOption: "Whole Milk",
-        temperature: "Cold",
-      },
-      {
-        name: "Mocha Bird",
-        quantity: 2,
-        price: 5.99,
-        milkOption: "Oat Milk",
-        temperature: "Hot",
-      },
-    ],
-    status: "complete",
-    createdAt: new Date(Date.now() - 1000 * 60 * 30), // 30 minutes ago
-    completedAt: new Date(Date.now() - 1000 * 60 * 10), // 10 minutes ago
-    notes: "Birthday order",
-  },
-];
-
 export default function OrderManagement() {
-  const [orders, setOrders] = React.useState([
-    {
-      id: 1,
-      customerName: "Alice Johnson",
-      items: [
-        {
-          name: "The BP.HAM",
-          quantity: 2,
-          price: 5.99,
-          milkOption: "Whole Milk",
-          temperature: "Hot",
-        },
-        {
-          name: "XO",
-          quantity: 1,
-          price: 5.99,
-          milkOption: "Oat Milk",
-          temperature: "Cold",
-        },
-      ],
-      status: "pending",
-      createdAt: new Date(Date.now() - 1000 * 60 * 15), // 15 minutes ago
-      notes: "Extra hot, please!",
-    },
-    {
-      id: 2,
-      customerName: "Bob Smith",
-      items: [
-        {
-          name: "Heritage",
-          quantity: 1,
-          price: 5.99,
-          milkOption: "Whole Milk",
-          temperature: "Hot",
-        },
-        {
-          name: "Posh",
-          quantity: 1,
-          price: 5.99,
-          milkOption: "Oat Milk",
-          temperature: "Cold",
-        },
-      ],
-      status: "pending",
-      createdAt: new Date(Date.now() - 1000 * 60 * 5), // 5 minutes ago
-      notes: "No sugar in the Heritage",
-    },
-    {
-      id: 3,
-      customerName: "Charlie Brown",
-      items: [
-        {
-          name: "Flower Power",
-          quantity: 3,
-          price: 5.99,
-          milkOption: "Whole Milk",
-          temperature: "Cold",
-        },
-        {
-          name: "Mocha Bird",
-          quantity: 2,
-          price: 5.99,
-          milkOption: "Oat Milk",
-          temperature: "Hot",
-        },
-      ],
-      status: "complete",
-      createdAt: new Date(Date.now() - 1000 * 60 * 30), // 30 minutes ago
-      completedAt: new Date(Date.now() - 1000 * 60 * 10), // 10 minutes ago
-      notes: "Birthday order",
-    },
-  ]);
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    const fetchData = async () => {
+      dispatch(findAllOrders());
+    };
+    fetchData();
+  }, []);
+  const orders = useSelector(selectAllOrders);
+  // const [orders, setOrders] = React.useState([]);
 
   const [isEditModalOpen, setIsEditModalOpen] = React.useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = React.useState(false);
@@ -233,25 +107,29 @@ export default function OrderManagement() {
     customerName: "",
     items: [],
     notes: "",
+    status: "pending",
+    createdAt: null,
+    completedAt: null,
   });
   const [showCompletedOrders, setShowCompletedOrders] = React.useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = React.useState(false);
   const [orderToDelete, setOrderToDelete] = React.useState(null);
 
-  const pendingOrders = orders.filter((order) => order.status === "pending");
-  const completedOrders = orders.filter((order) => order.status === "complete");
+  const pendingOrders = orders.filter(
+    (order) => order.orders.status === "pending"
+  );
+  const completedOrders = orders.filter(
+    (order) => order.orders.status === "complete"
+  );
 
   const handleAddOrder = () => {
+    console.log(orders);
     setIsAddModalOpen(true);
   };
 
-  const handleSaveNewOrder = () => {
+  const handleSaveNewOrder = async () => {
     if (newOrder.customerName && newOrder.items.length > 0) {
-      const newId = Math.max(...orders.map((o) => o.id), 0) + 1;
-      setOrders([
-        ...orders,
-        { ...newOrder, id: newId, status: "pending", createdAt: new Date() },
-      ]);
+      await dispatch(createOrder(newOrder));
       setIsAddModalOpen(false);
       setNewOrder({ customerName: "", items: [], notes: "" });
     }
@@ -317,11 +195,12 @@ export default function OrderManagement() {
 
   const handleSaveOrder = () => {
     if (editingOrder) {
-      setOrders(
-        orders.map((order) =>
-          order.id === editingOrder.id ? editingOrder : order
-        )
-      );
+      // setOrders(
+      //   orders.map((order) =>
+      //     order.id === editingOrder.id ? editingOrder : order
+      //   )
+      // );
+      // orderHistory.currentHistory = [...orders];
       setIsEditModalOpen(false);
       setEditingOrder(null);
     }
@@ -386,14 +265,8 @@ export default function OrderManagement() {
     }
   };
 
-  const handleMarkCompleted = (orderId) => {
-    setOrders(
-      orders.map((order) =>
-        order.id === orderId
-          ? { ...order, status: "complete", completedAt: new Date() }
-          : order
-      )
-    );
+  const handleMarkCompleted = async (order) => {
+    await dispatch(completeOrder(order));
   };
 
   const handleDeleteOrder = (order) => {
@@ -403,7 +276,10 @@ export default function OrderManagement() {
 
   const confirmDeleteOrder = () => {
     if (orderToDelete) {
-      setOrders(orders.filter((order) => order.id !== orderToDelete.id));
+      // setOrders(orders.filter((order) => order.id !== orderToDelete.id));
+      orderHistory.currentHistory = orders.filter(
+        (order) => order.id !== orderToDelete.id
+      );
       setIsDeleteConfirmOpen(false);
       setOrderToDelete(null);
     }
@@ -420,6 +296,8 @@ export default function OrderManagement() {
   };
 
   const formatDuration = (start, end) => {
+    start = new Date(start);
+    end = new Date(end);
     const diff = end.getTime() - start.getTime();
     const minutes = Math.floor(diff / 60000);
     const seconds = Math.floor((diff % 60000) / 1000);
@@ -436,43 +314,48 @@ export default function OrderManagement() {
               <CardTitle className="flex items-center justify-between text-base">
                 <span className="flex items-center">
                   <User className="mr-2 h-4 w-4" />
-                  {order.customerName}
+                  {order.orders.customerName}
                 </span>
                 <span
                   className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                    order.status === "complete"
+                    order.orders.status === "complete"
                       ? "bg-green-100 text-green-800"
                       : "bg-yellow-100 text-yellow-800"
                   }`}
                 >
-                  {order.status}
+                  {order.orders.status}
                 </span>
               </CardTitle>
               <div className="text-xs text-gray-500">
-                Created: {formatDate(order.createdAt)}
-                {order.status === "complete" && order.completedAt && (
-                  <div>
-                    Completed: {formatDate(order.completedAt)}
-                    <br />
-                    Duration:{" "}
-                    {formatDuration(order.createdAt, order.completedAt)}
-                  </div>
-                )}
+                Created: {formatDate(order.orders.createdAt)}
+                {order.orders.status === "complete" &&
+                  order.orders.completedAt && (
+                    <div>
+                      Completed: {formatDate(order.orders.completedAt)}
+                      <br />
+                      Duration:{" "}
+                      {formatDuration(
+                        order.orders.createdAt,
+                        order.orders.completedAt
+                      )}
+                    </div>
+                  )}
               </div>
             </CardHeader>
             <CardContent className="p-5">
               <h3 className="font-semibold mb-2 flex items-center text-sm">
                 <ShoppingBag className="mr-2 h-4 w-4" />
                 Order Items:
-                {order.status === "pending" && (
+                {order.orders.status === "pending" && (
                   <span className="ml-2 text-xs font-normal text-gray-500 flex items-center">
                     <Clock className="mr-1 h-3 w-3" />
-                    Processing: {formatDuration(order.createdAt, new Date())}
+                    Processing:{" "}
+                    {formatDuration(order.orders.createdAt, new Date())}
                   </span>
                 )}
               </h3>
               <ul className="space-y-1 text-sm">
-                {order.items.map((item, index) => (
+                {order.orders.items.map((item, index) => (
                   <li key={index} className="flex justify-between items-center">
                     <span className="text-xs">
                       {item.name}{" "}
@@ -488,17 +371,17 @@ export default function OrderManagement() {
               </ul>
               <div className="mt-2 text-right font-semibold text-sm">
                 Total: $
-                {order.items
+                {order.orders.items
                   .reduce(
                     (total, item) => total + item.price * item.quantity,
                     0
                   )
                   .toFixed(2)}
               </div>
-              {order.notes && (
+              {order.orders.notes && (
                 <div className="mt-2 text-xs text-gray-600">
                   <StickyNote className="inline-block mr-1 h-3 w-3" />
-                  Notes: {order.notes}
+                  Notes: {order.orders.notes}
                 </div>
               )}
             </CardContent>
@@ -510,11 +393,11 @@ export default function OrderManagement() {
               >
                 Edit
               </Button>
-              {order.status === "pending" && (
+              {order.orders.status === "pending" && (
                 <Button
                   className="flex-1 text-xs h-9"
                   variant="secondary"
-                  onClick={() => handleMarkCompleted(order.id)}
+                  onClick={() => handleMarkCompleted(order)}
                 >
                   <Check className="mr-1 h-4 w-4" />
                   Complete
