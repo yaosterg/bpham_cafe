@@ -39,6 +39,7 @@ import {
 import { orderHistory } from "@/components/OrderData";
 import {
   createOrder,
+  deleteOrder,
   findAllOrders,
   completeOrder,
   selectAllOrders,
@@ -274,12 +275,9 @@ export default function OrderManagement() {
     setIsDeleteConfirmOpen(true);
   };
 
-  const confirmDeleteOrder = () => {
+  const confirmDeleteOrder = async () => {
     if (orderToDelete) {
-      // setOrders(orders.filter((order) => order.id !== orderToDelete.id));
-      orderHistory.currentHistory = orders.filter(
-        (order) => order.id !== orderToDelete.id
-      );
+      dispatch(deleteOrder(orderToDelete));
       setIsDeleteConfirmOpen(false);
       setOrderToDelete(null);
     }
@@ -386,13 +384,13 @@ export default function OrderManagement() {
               )}
             </CardContent>
             <CardFooter className="bg-gray-50 p-4 flex flex-wrap justify-between items-center gap-2">
-              <Button
+              {/* <Button
                 className="flex-1 text-xs h-9"
                 variant="outline"
                 onClick={() => handleEditOrder(order)}
               >
                 Edit
-              </Button>
+              </Button> */}
               {order.orders.status === "pending" && (
                 <Button
                   className="flex-1 text-xs h-9"
