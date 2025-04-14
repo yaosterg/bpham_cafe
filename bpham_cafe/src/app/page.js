@@ -1,881 +1,810 @@
 "use client";
-import React from "react";
-import { useEffect } from "react";
-import { useSelector, useDispatch } from "react-redux";
-import { Button } from "@/components/ui/button";
+
+import { useRef } from "react";
+import Image from "next/image";
+import Link from "next/link";
 import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-  CardFooter,
-} from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { Separator } from "@/components/ui/separator";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  PlusCircle,
-  CheckSquare,
-  User,
-  ShoppingBag,
-  X,
-  Check,
-  Trash2,
   Coffee,
-  CakeSlice,
+  ShoppingBag,
+  Search,
+  Menu,
+  ArrowRight,
+  Heart,
+  Star,
   Clock,
-  StickyNote,
+  MapPin,
 } from "lucide-react";
-import { orderHistory } from "@/components/OrderData";
-import {
-  createOrder,
-  deleteOrder,
-  findAllOrders,
-  completeOrder,
-  selectAllOrders,
-} from "@/store/reducers/orderSlice";
+import { motion, useInView } from "framer-motion";
+import { Quicksand } from "next/font/google";
 
-const SIGNATURE_LATTES = [
-  "The BP.HAM",
-  "XO",
-  "Heritage",
-  "Posh",
-  "Flower Power",
-  "Mocha Bird",
-];
-const CLASSICS = [
-  "Espresso",
-  "Macchiato",
-  "Espresso + Splash of Milk",
-  "Cortado",
-  "Cappuccino",
-  "Latte",
-  "Americano",
-  "Aerocano",
-  'Espresso + "Nitro"',
-];
-const BAKERY_ITEMS = {
-  Cookies: ["Triple Chocolate", "Ube White Chocolate", "Cookies & Cream"],
-  Breads: ["Banana Chocolate Chip", "Earl Gray"],
-  Cake: ["Carrot Cake Cupcakes", "Chocolate Cake"],
+// Initialize Quicksand font
+const quicksand = Quicksand({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-quicksand",
+});
+
+// Custom Button component
+const Button = ({ children, className, ...props }) => {
+  return (
+    <button
+      className={`inline-flex items-center justify-center whitespace-nowrap rounded-full text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 ${className}`}
+      {...props}
+    >
+      {children}
+    </button>
+  );
 };
 
-const getItemCategory = (itemName) => {
-  if (SIGNATURE_LATTES.includes(itemName)) return "signature";
-  if (CLASSICS.includes(itemName)) return "classic";
-  return "bakery";
+// Animation variants
+const fadeIn = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.6, ease: "easeOut" },
+  },
 };
 
-const getCategoryColor = (category) => {
-  switch (category) {
-    case "signature":
-      return "bg-blue-50";
-    case "classic":
-      return "bg-purple-50";
-    case "bakery":
-      return "bg-green-50";
-    default:
-      return "bg-gray-50";
+const staggerContainer = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.2,
+    },
+  },
+};
+
+const popUp = {
+  hidden: { scale: 0.8, opacity: 0 },
+  visible: {
+    scale: 1,
+    opacity: 1,
+    transition: { type: "spring", stiffness: 300, damping: 20 },
+  },
+};
+
+export default function BrianCoffee() {
+  // Custom animation hook
+  function useAnimateInView() {
+    const ref = useRef(null);
+    const isInView = useInView(ref, { once: true, amount: 0.3 });
+    return [ref, isInView];
   }
-};
 
-export default function OrderManagement() {
-  const dispatch = useDispatch();
+  const [featuredRef, featuredInView] = useAnimateInView();
+  const [aboutRef, aboutInView] = useAnimateInView();
+  const [testimonialRef, testimonialInView] = useAnimateInView();
+  const [contactRef, contactInView] = useAnimateInView();
+  const [newsletterRef, newsletterInView] = useAnimateInView();
 
-  useEffect(() => {
-    const fetchData = async () => {
-      dispatch(findAllOrders());
-    };
-    fetchData();
-  }, []);
-  const orders = useSelector(selectAllOrders);
-  // const [orders, setOrders] = React.useState([]);
-
-  const [isEditModalOpen, setIsEditModalOpen] = React.useState(false);
-  const [isAddModalOpen, setIsAddModalOpen] = React.useState(false);
-  const [editingOrder, setEditingOrder] = React.useState(null);
-  const [newOrder, setNewOrder] = React.useState({
-    customerName: "",
-    items: [],
-    notes: "",
-    status: "pending",
-    createdAt: null,
-    completedAt: null,
-  });
-  const [showCompletedOrders, setShowCompletedOrders] = React.useState(false);
-  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = React.useState(false);
-  const [orderToDelete, setOrderToDelete] = React.useState(null);
-
-  const pendingOrders = orders.filter(
-    (order) => order.orders.status === "pending"
-  );
-  const completedOrders = orders.filter(
-    (order) => order.orders.status === "complete"
-  );
-
-  const handleAddOrder = () => {
-    console.log(orders);
-    setIsAddModalOpen(true);
-  };
-
-  const handleSaveNewOrder = async () => {
-    if (newOrder.customerName && newOrder.items.length > 0) {
-      await dispatch(createOrder(newOrder));
-      setIsAddModalOpen(false);
-      setNewOrder({ customerName: "", items: [], notes: "" });
-    }
-  };
-
-  const handleAddNewOrderItem = (itemName, isBakeryItem = false) => {
-    const milkLabel = document.getElementById(`${itemName}-milk-label`);
-    const tempLabel = document.getElementById(`${itemName}-temp-label`);
-    const milkOption = isBakeryItem
-      ? "N/A"
-      : milkLabel
-      ? milkLabel.textContent === "Oat"
-        ? "Oat Milk"
-        : "Whole Milk"
-      : "Whole Milk";
-    const temperature = isBakeryItem
-      ? "N/A"
-      : tempLabel
-      ? tempLabel.textContent
-      : "Hot";
-    const price = 5.99;
-    const existingItemIndex = newOrder.items.findIndex(
-      (item) =>
-        item.name === itemName &&
-        item.milkOption === milkOption &&
-        item.temperature === temperature
-    );
-
-    if (existingItemIndex !== -1) {
-      const updatedItems = [...newOrder.items];
-      updatedItems[existingItemIndex].quantity += 1;
-      setNewOrder({ ...newOrder, items: updatedItems });
-    } else {
-      setNewOrder({
-        ...newOrder,
-        items: [
-          ...newOrder.items,
-          { name: itemName, quantity: 1, price, milkOption, temperature },
-        ],
-      });
-    }
-  };
-
-  const handleUpdateNewOrderItem = (index, field, value) => {
-    const updatedItems = [...newOrder.items];
-    updatedItems[index] = { ...updatedItems[index], [field]: value };
-    setNewOrder({ ...newOrder, items: updatedItems });
-  };
-
-  const handleRemoveNewOrderItem = (index) => {
-    const updatedItems = newOrder.items.filter((_, i) => i !== index);
-    setNewOrder({ ...newOrder, items: updatedItems });
-  };
-
-  const handleToggleCompletedOrders = () => {
-    setShowCompletedOrders(!showCompletedOrders);
-  };
-
-  const handleEditOrder = (order) => {
-    setEditingOrder(order);
-    setIsEditModalOpen(true);
-  };
-
-  const handleSaveOrder = () => {
-    if (editingOrder) {
-      // setOrders(
-      //   orders.map((order) =>
-      //     order.id === editingOrder.id ? editingOrder : order
-      //   )
-      // );
-      // orderHistory.currentHistory = [...orders];
-      setIsEditModalOpen(false);
-      setEditingOrder(null);
-    }
-  };
-
-  const handleUpdateOrderItem = (index, field, value) => {
-    if (editingOrder) {
-      const updatedItems = [...editingOrder.items];
-      updatedItems[index] = { ...updatedItems[index], [field]: value };
-      setEditingOrder({ ...editingOrder, items: updatedItems });
-    }
-  };
-
-  const handleAddItem = (itemName, isBakeryItem = false) => {
-    if (editingOrder) {
-      const milkLabel = document.getElementById(`${itemName}-milk-label`);
-      const tempLabel = document.getElementById(`${itemName}-temp-label`);
-      const milkOption = isBakeryItem
-        ? "N/A"
-        : milkLabel
-        ? milkLabel.textContent === "Oat"
-          ? "Oat Milk"
-          : "Whole Milk"
-        : "Whole Milk";
-      const temperature = isBakeryItem
-        ? "N/A"
-        : tempLabel
-        ? tempLabel.textContent
-        : "Hot";
-      const existingItemIndex = editingOrder.items.findIndex(
-        (item) =>
-          item.name === itemName &&
-          item.milkOption === milkOption &&
-          item.temperature === temperature
-      );
-      if (existingItemIndex !== -1) {
-        const updatedItems = [...editingOrder.items];
-        updatedItems[existingItemIndex].quantity += 1;
-        setEditingOrder({ ...editingOrder, items: updatedItems });
-      } else {
-        setEditingOrder({
-          ...editingOrder,
-          items: [
-            ...editingOrder.items,
-            {
-              name: itemName,
-              quantity: 1,
-              price: 5.99,
-              milkOption,
-              temperature,
-            },
-          ],
-        });
-      }
-    }
-  };
-
-  const handleRemoveItem = (index) => {
-    if (editingOrder) {
-      const updatedItems = editingOrder.items.filter((_, i) => i !== index);
-      setEditingOrder({ ...editingOrder, items: updatedItems });
-    }
-  };
-
-  const handleMarkCompleted = async (order) => {
-    await dispatch(completeOrder(order));
-  };
-
-  const handleDeleteOrder = (order) => {
-    setOrderToDelete(order);
-    setIsDeleteConfirmOpen(true);
-  };
-
-  const confirmDeleteOrder = async () => {
-    if (orderToDelete) {
-      dispatch(deleteOrder(orderToDelete));
-      setIsDeleteConfirmOpen(false);
-      setOrderToDelete(null);
-    }
-  };
-
-  const formatDate = (date) => {
-    return date.toLocaleString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
-  const formatDuration = (start, end) => {
-    start = new Date(start);
-    end = new Date(end);
-    const diff = end.getTime() - start.getTime();
-    const minutes = Math.floor(diff / 60000);
-    const seconds = Math.floor((diff % 60000) / 1000);
-    return `${minutes}m ${seconds}s`;
-  };
-
-  const OrderQueue = ({ orders, title }) => (
-    <section>
-      <h2 className="text-2xl font-semibold mb-6">{title}</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-        {orders.map((order) => (
-          <Card key={order.id} className="overflow-hidden">
-            <CardHeader className="bg-gray-50 p-4">
-              <CardTitle className="flex items-center justify-between text-base">
-                <span className="flex items-center">
-                  <User className="mr-2 h-4 w-4" />
-                  {order.orders.customerName}
-                </span>
-                <span
-                  className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                    order.orders.status === "complete"
-                      ? "bg-green-100 text-green-800"
-                      : "bg-yellow-100 text-yellow-800"
-                  }`}
-                >
-                  {order.orders.status}
-                </span>
-              </CardTitle>
-              <div className="text-xs text-gray-500">
-                Created: {formatDate(order.orders.createdAt)}
-                {order.orders.status === "complete" &&
-                  order.orders.completedAt && (
-                    <div>
-                      Completed: {formatDate(order.orders.completedAt)}
-                      <br />
-                      Duration:{" "}
-                      {formatDuration(
-                        order.orders.createdAt,
-                        order.orders.completedAt
-                      )}
-                    </div>
-                  )}
-              </div>
-            </CardHeader>
-            <CardContent className="p-5">
-              <h3 className="font-semibold mb-2 flex items-center text-sm">
-                <ShoppingBag className="mr-2 h-4 w-4" />
-                Order Items:
-                {order.orders.status === "pending" && (
-                  <span className="ml-2 text-xs font-normal text-gray-500 flex items-center">
-                    <Clock className="mr-1 h-3 w-3" />
-                    Processing:{" "}
-                    {formatDuration(order.orders.createdAt, new Date())}
-                  </span>
-                )}
-              </h3>
-              <ul className="space-y-1 text-sm">
-                {order.orders.items.map((item, index) => (
-                  <li key={index} className="flex justify-between items-center">
-                    <span className="text-xs">
-                      {item.name}{" "}
-                      {item.milkOption !== "N/A" &&
-                        `(${item.milkOption}, ${item.temperature})`}
-                    </span>
-                    <span className="font-medium text-xs">
-                      x{item.quantity} ($
-                      {(item.price * item.quantity).toFixed(2)})
-                    </span>
-                  </li>
-                ))}
-              </ul>
-              <div className="mt-2 text-right font-semibold text-sm">
-                Total: $
-                {order.orders.items
-                  .reduce(
-                    (total, item) => total + item.price * item.quantity,
-                    0
-                  )
-                  .toFixed(2)}
-              </div>
-              {order.orders.notes && (
-                <div className="mt-2 text-xs text-gray-600">
-                  <StickyNote className="inline-block mr-1 h-3 w-3" />
-                  Notes: {order.orders.notes}
-                </div>
-              )}
-            </CardContent>
-            <CardFooter className="bg-gray-50 p-4 flex flex-wrap justify-between items-center gap-2">
-              {/* <Button
-                className="flex-1 text-xs h-9"
-                variant="outline"
-                onClick={() => handleEditOrder(order)}
-              >
-                Edit
-              </Button> */}
-              {order.orders.status === "pending" && (
-                <Button
-                  className="flex-1 text-xs h-9"
-                  variant="secondary"
-                  onClick={() => handleMarkCompleted(order)}
-                >
-                  <Check className="mr-1 h-4 w-4" />
-                  Complete
-                </Button>
-              )}
-              <Button
-                className="flex-1 text-xs h-9"
-                variant="destructive"
-                onClick={() => handleDeleteOrder(order)}
-              >
-                <Trash2 className="mr-1 h-4 w-4" />
-                Delete
-              </Button>
-            </CardFooter>
-          </Card>
-        ))}
-      </div>
-    </section>
-  );
-
-  const MenuSection = ({
-    title,
-    items,
-    onAddItem,
-    showOptions = true,
-    icon,
-  }) => {
-    const renderItems = (itemList, isBakeryItem = false) => (
-      <div className="grid gap-4 sm:grid-cols-2">
-        {itemList.map((item) => {
-          const category = getItemCategory(item);
-          const bgColor = getCategoryColor(category);
-          return (
-            <div
-              key={item}
-              className={`flex flex-col justify-between ${bgColor} p-3 rounded-lg`}
-            >
-              <span className="font-medium mb-2">{item}</span>
-              <div className="flex flex-col space-y-2">
-                {showOptions && (
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <Switch
-                        id={`${item}-milk-toggle`}
-                        onCheckedChange={(checked) => {
-                          const label = document.getElementById(
-                            `${item}-milk-label`
-                          );
-                          if (label)
-                            label.textContent = checked ? "Oat" : "Whole";
-                        }}
-                      />
-                      <Label
-                        id={`${item}-milk-label`}
-                        htmlFor={`${item}-milk-toggle`}
-                        className="text-sm"
-                      >
-                        Whole
-                      </Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Switch
-                        id={`${item}-temp-toggle`}
-                        onCheckedChange={(checked) => {
-                          const label = document.getElementById(
-                            `${item}-temp-label`
-                          );
-                          if (label)
-                            label.textContent = checked ? "Cold" : "Hot";
-                        }}
-                      />
-                      <Label
-                        id={`${item}-temp-label`}
-                        htmlFor={`${item}-temp-toggle`}
-                        className="text-sm"
-                      >
-                        Hot
-                      </Label>
-                    </div>
-                  </div>
-                )}
-                <Button
-                  variant="outline"
-                  onClick={() => onAddItem(item, isBakeryItem)}
-                  className="w-full"
-                >
-                  <PlusCircle className="mr-2 h-4 w-4" />
-                  Add to Order
-                </Button>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    );
-
-    const renderBakeryItems = (items) => (
-      <div className="space-y-8">
-        {Object.entries(items).map(([category, categoryItems]) => (
-          <div key={category}>
-            <h3 className="text-lg font-semibold mb-4">{category}</h3>
-            <div className="grid gap-4 sm:grid-cols-2">
-              {categoryItems.map((item) => (
-                <div
-                  key={item}
-                  className="flex flex-col justify-between bg-green-50 p-3 rounded-lg"
-                >
-                  <span className="font-medium mb-2">{item}</span>
-                  <Button
-                    variant="outline"
-                    onClick={() => onAddItem(item, true)}
-                    className="w-full"
-                  >
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Add to Order
-                  </Button>
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
-    );
-
+  // Animated Coffee Component
+  const AnimatedCoffee = () => {
     return (
-      <div className="mb-8 bg-white p-6 rounded-lg shadow-sm">
-        <h2 className="text-xl font-semibold mb-6 flex items-center">
-          {icon}
-          <span className="ml-2">{title}</span>
-        </h2>
-        {Array.isArray(items) ? renderItems(items) : renderBakeryItems(items)}
+      <div className="w-full h-full flex items-center justify-center">
+        <div className="relative w-64 h-64">
+          {/* Coffee Cup */}
+          <motion.svg
+            viewBox="0 0 200 200"
+            xmlns="http://www.w3.org/2000/svg"
+            className="w-full h-full"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+          >
+            {/* Saucer */}
+            <motion.ellipse
+              cx="100"
+              cy="170"
+              rx="70"
+              ry="15"
+              fill="#E9DCC9"
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+            />
+
+            {/* Cup */}
+            <motion.g
+              initial={{ y: 50, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.4, type: "spring", stiffness: 100 }}
+            >
+              {/* Cup Body */}
+              <motion.path
+                d="M60,70 L60,140 C60,155 80,165 100,165 C120,165 140,155 140,140 L140,70 Z"
+                fill="white"
+                stroke="#E9DCC9"
+                strokeWidth="3"
+                initial={{ pathLength: 0 }}
+                animate={{ pathLength: 1 }}
+                transition={{ duration: 1, delay: 0.5 }}
+              />
+
+              {/* Cup Handle */}
+              <motion.path
+                d="M140,90 C160,90 170,100 170,115 C170,130 160,140 140,140"
+                fill="transparent"
+                stroke="#E9DCC9"
+                strokeWidth="3"
+                strokeLinecap="round"
+                initial={{ pathLength: 0 }}
+                animate={{ pathLength: 1 }}
+                transition={{ duration: 0.8, delay: 1 }}
+              />
+
+              {/* Coffee Liquid */}
+              <motion.path
+                d="M65,80 L135,80 L135,135 C135,145 120,155 100,155 C80,155 65,145 65,135 Z"
+                fill="#A67C52"
+                initial={{ y: 50, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 1.2, duration: 0.8 }}
+              />
+
+              {/* Coffee Surface */}
+              <motion.ellipse
+                cx="100"
+                cy="80"
+                rx="35"
+                ry="10"
+                fill="#8A6642"
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 1.5, duration: 0.5 }}
+              />
+
+              {/* Latte Art - Heart */}
+              <motion.path
+                d="M90,75 C90,65 110,65 110,75 L100,85 Z"
+                fill="white"
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 2, duration: 0.5 }}
+              />
+            </motion.g>
+
+            {/* Steam */}
+            <motion.g>
+              <motion.path
+                d="M85,60 C85,50 75,45 75,35 C75,25 85,20 85,10"
+                fill="transparent"
+                stroke="#E9DCC9"
+                strokeWidth="2"
+                strokeLinecap="round"
+                initial={{ pathLength: 0, opacity: 0 }}
+                animate={{
+                  pathLength: [0, 1, 0],
+                  opacity: [0, 0.7, 0],
+                }}
+                transition={{
+                  duration: 3,
+                  repeat: Number.POSITIVE_INFINITY,
+                  repeatType: "loop",
+                  times: [0, 0.5, 1],
+                }}
+              />
+              <motion.path
+                d="M100,55 C100,45 110,40 110,30 C110,20 100,15 100,5"
+                fill="transparent"
+                stroke="#E9DCC9"
+                strokeWidth="2"
+                strokeLinecap="round"
+                initial={{ pathLength: 0, opacity: 0 }}
+                animate={{
+                  pathLength: [0, 1, 0],
+                  opacity: [0, 0.7, 0],
+                }}
+                transition={{
+                  duration: 3,
+                  repeat: Number.POSITIVE_INFINITY,
+                  repeatType: "loop",
+                  delay: 0.5,
+                  times: [0, 0.5, 1],
+                }}
+              />
+              <motion.path
+                d="M115,60 C115,50 125,45 125,35 C125,25 115,20 115,10"
+                fill="transparent"
+                stroke="#E9DCC9"
+                strokeWidth="2"
+                strokeLinecap="round"
+                initial={{ pathLength: 0, opacity: 0 }}
+                animate={{
+                  pathLength: [0, 1, 0],
+                  opacity: [0, 0.7, 0],
+                }}
+                transition={{
+                  duration: 3,
+                  repeat: Number.POSITIVE_INFINITY,
+                  repeatType: "loop",
+                  delay: 1,
+                  times: [0, 0.5, 1],
+                }}
+              />
+            </motion.g>
+
+            {/* Coffee Beans */}
+            <motion.g>
+              {/* Bean 1 */}
+              <motion.ellipse
+                cx="50"
+                cy="190"
+                rx="15"
+                ry="8"
+                fill="#8A6642"
+                transform="rotate(-30, 50, 190)"
+                initial={{ opacity: 0, scale: 0 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 2.2, duration: 0.5 }}
+              />
+              {/* Bean 2 */}
+              <motion.ellipse
+                cx="150"
+                cy="185"
+                rx="15"
+                ry="8"
+                fill="#8A6642"
+                transform="rotate(30, 150, 185)"
+                initial={{ opacity: 0, scale: 0 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 2.4, duration: 0.5 }}
+              />
+              {/* Bean 3 */}
+              <motion.ellipse
+                cx="30"
+                cy="160"
+                rx="12"
+                ry="7"
+                fill="#A67C52"
+                transform="rotate(15, 30, 160)"
+                initial={{ opacity: 0, scale: 0 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 2.6, duration: 0.5 }}
+              />
+              {/* Bean 4 */}
+              <motion.ellipse
+                cx="170"
+                cy="160"
+                rx="12"
+                ry="7"
+                fill="#A67C52"
+                transform="rotate(-15, 170, 160)"
+                initial={{ opacity: 0, scale: 0 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 2.8, duration: 0.5 }}
+              />
+            </motion.g>
+          </motion.svg>
+        </div>
       </div>
     );
   };
 
   return (
-    <div className="min-h-screen p-6 bg-gray-100 container mx-auto max-w-7xl">
-      <header className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
-        <h1 className="text-2xl sm:text-3xl font-bold">Order Management</h1>
-        <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4 w-full sm:w-auto">
-          <Button
-            className="w-full sm:w-auto"
-            variant="outline"
-            onClick={handleAddOrder}
+    <div
+      className={`min-h-screen bg-[#FAF3E8] ${quicksand.variable}`}
+      style={{ fontFamily: "var(--font-quicksand, sans-serif)" }}
+    >
+      {/* Navigation */}
+      <motion.header
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.5 }}
+        className="fixed top-0 left-0 right-0 z-50 bg-[#FAF3E8]/90 backdrop-blur-sm"
+      >
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+          <motion.div
+            className="flex items-center gap-2"
+            whileHover={{ scale: 1.05 }}
+            transition={{ type: "spring", stiffness: 400, damping: 10 }}
           >
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Add Order
-          </Button>
-          <Button
-            className="w-full sm:w-auto"
-            onClick={handleToggleCompletedOrders}
-          >
-            <CheckSquare className="mr-2 h-4 w-4" />
-            {showCompletedOrders ? "Current Orders" : "Completed Orders"}
-          </Button>
-        </div>
-      </header>
-      <main>
-        {showCompletedOrders ? (
-          <OrderQueue orders={completedOrders} title="Completed Order Queue" />
-        ) : (
-          <OrderQueue orders={pendingOrders} title="Current Order Queue" />
-        )}
-      </main>
+            <Coffee className="h-5 w-5 text-[#A67C52]" />
+            <span className="text-lg text-[#A67C52] tracking-tight font-medium">
+              Brian Coffee
+            </span>
+          </motion.div>
 
-      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-        <DialogContent className="sm:max-w-[800px] w-[95vw] max-h-[90vh] flex flex-col p-0 mx-auto">
-          <DialogHeader className="px-6 py-4">
-            <DialogTitle>Edit Order</DialogTitle>
-          </DialogHeader>
-          {editingOrder && (
-            <ScrollArea className="flex-grow px-6 py-4">
-              <div className="grid gap-6 py-4">
-                <div className="flex items-center gap-4">
-                  <Label htmlFor="customerName" className="w-24">
-                    Customer
-                  </Label>
-                  <Input
-                    id="customerName"
-                    value={editingOrder.customerName}
-                    onChange={(e) =>
-                      setEditingOrder({
-                        ...editingOrder,
-                        customerName: e.target.value,
-                      })
-                    }
-                    className="flex-grow"
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="status" className="text-right">
-                    Status
-                  </Label>
-                  <select
-                    id="status"
-                    value={editingOrder.status}
-                    onChange={(e) =>
-                      setEditingOrder({
-                        ...editingOrder,
-                        status: e.target.value,
-                      })
-                    }
-                    className="col-span-3 p-2 border rounded"
-                  >
-                    <option value="pending">Pending</option>
-                    <option value="complete">Complete</option>
-                  </select>
-                </div>
-                <div className="grid grid-cols-4 items-start gap-4">
-                  <Label htmlFor="notes" className="text-right mt-2">
-                    Notes
-                  </Label>
-                  <Textarea
-                    id="notes"
-                    value={editingOrder.notes}
-                    onChange={(e) =>
-                      setEditingOrder({
-                        ...editingOrder,
-                        notes: e.target.value,
-                      })
-                    }
-                    className="col-span-3 h-24"
-                    placeholder="Add any special instructions or notes here..."
-                  />
-                </div>
-                <Separator />
-                <div className="space-y-6">
-                  <MenuSection
-                    title="Signature Lattes"
-                    items={SIGNATURE_LATTES}
-                    onAddItem={handleAddItem}
-                    icon={<Coffee className="h-6 w-6" />}
-                  />
-                  <MenuSection
-                    title="Classics"
-                    items={CLASSICS}
-                    onAddItem={handleAddItem}
-                    icon={<Coffee className="h-6 w-6" />}
-                  />
-                  <MenuSection
-                    title="Bakery"
-                    items={BAKERY_ITEMS}
-                    onAddItem={handleAddItem}
-                    showOptions={false}
-                    icon={<CakeSlice className="h-6 w-6" />}
-                  />
-                </div>
-                <Separator />
-                <div className="space-y-4">
-                  <h3 className="font-semibold text-lg">Current Order Items</h3>
-                  {editingOrder.items.map((item, index) => {
-                    const category = getItemCategory(item.name);
-                    const bgColor = getCategoryColor(category);
-                    return (
-                      <Card key={index} className={`p-4 ${bgColor}`}>
-                        <div className="flex items-center justify-between">
-                          <div className="flex-grow grid gap-2">
-                            <div className="font-medium">{item.name}</div>
-                            <div className="flex items-center space-x-4">
-                              <Input
-                                type="number"
-                                value={item.quantity}
-                                onChange={(e) =>
-                                  handleUpdateOrderItem(
-                                    index,
-                                    "quantity",
-                                    Number(e.target.value)
-                                  )
-                                }
-                                className="w-20"
-                              />
-                              {item.milkOption !== "N/A" && (
-                                <select
-                                  value={item.milkOption}
-                                  onChange={(e) =>
-                                    handleUpdateOrderItem(
-                                      index,
-                                      "milkOption",
-                                      e.target.value
-                                    )
-                                  }
-                                  className="p-2 border rounded bg-white"
-                                >
-                                  <option value="Whole Milk">Whole Milk</option>
-                                  <option value="Oat Milk">Oat Milk</option>
-                                </select>
-                              )}
-                              {item.temperature !== "N/A" && (
-                                <select
-                                  value={item.temperature}
-                                  onChange={(e) =>
-                                    handleUpdateOrderItem(
-                                      index,
-                                      "temperature",
-                                      e.target.value
-                                    )
-                                  }
-                                  className="p-2 border rounded bg-white"
-                                >
-                                  <option value="Hot">Hot</option>
-                                  <option value="Cold">Cold</option>
-                                </select>
-                              )}
-                            </div>
-                          </div>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => handleRemoveItem(index)}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </Card>
-                    );
-                  })}
-                </div>
-              </div>
-            </ScrollArea>
-          )}
-          <DialogFooter className="px-6 py-4">
-            <Button className="w-full sm:w-auto" onClick={handleSaveOrder}>
-              Save changes
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
-        <DialogContent className="sm:max-w-[90vw] w-[95vw] h-[90vh] flex flex-col p-0 mx-auto">
-          <DialogHeader className="px-6 py-4">
-            <DialogTitle>Add New Order</DialogTitle>
-          </DialogHeader>
-          <div className="flex-grow flex flex-col md:flex-row overflow-hidden">
-            <div className="flex-grow md:w-2/3 p-6 overflow-y-auto">
-              <div className="grid gap-6">
-                <div className="flex items-center gap-4">
-                  <Label htmlFor="newCustomerName" className="w-24">
-                    Customer
-                  </Label>
-                  <Input
-                    id="newCustomerName"
-                    value={newOrder.customerName}
-                    onChange={(e) =>
-                      setNewOrder({ ...newOrder, customerName: e.target.value })
-                    }
-                    className="flex-grow"
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-start gap-4">
-                  <Label htmlFor="newNotes" className="text-right mt-2">
-                    Notes
-                  </Label>
-                  <Textarea
-                    id="newNotes"
-                    value={newOrder.notes}
-                    onChange={(e) =>
-                      setNewOrder({ ...newOrder, notes: e.target.value })
-                    }
-                    className="col-span-3 h-24"
-                    placeholder="Add any special instructions or notes here..."
-                  />
-                </div>
-                <Separator />
-                <div className="space-y-6">
-                  <MenuSection
-                    title="Signature Lattes"
-                    items={SIGNATURE_LATTES}
-                    onAddItem={handleAddNewOrderItem}
-                    icon={<Coffee className="h-6 w-6" />}
-                  />
-                  <MenuSection
-                    title="Classics"
-                    items={CLASSICS}
-                    onAddItem={handleAddNewOrderItem}
-                    icon={<Coffee className="h-6 w-6" />}
-                  />
-                  <MenuSection
-                    title="Bakery"
-                    items={BAKERY_ITEMS}
-                    onAddItem={handleAddNewOrderItem}
-                    showOptions={false}
-                    icon={<CakeSlice className="h-6 w-6" />}
-                  />
-                </div>
-              </div>
-            </div>
-            <div className="md:w-1/3 border-t md:border-t-0 md:border-l border-gray-200 bg-white flex flex-col">
-              <div className="p-4 bg-gray-50 border-b border-gray-200">
-                <h3 className="font-semibold text-lg">Current Order</h3>
-              </div>
-              <div className="flex-grow overflow-y-auto p-4">
-                <div className="space-y-4">
-                  {newOrder.items.map((item, index) => {
-                    const category = getItemCategory(item.name);
-                    const bgColor = getCategoryColor(category);
-                    return (
-                      <Card key={index} className={`p-4 ${bgColor}`}>
-                        <div className="flex justify-between items-center">
-                          <div>
-                            <span className="font-medium">{item.name}</span>
-                            {item.milkOption !== "N/A" && (
-                              <span className="text-sm text-gray-600 ml-2">
-                                ({item.milkOption}, {item.temperature})
-                              </span>
-                            )}
-                          </div>
-                          <div className="flex items-center space-x-4">
-                            <span className="font-medium">
-                              x{item.quantity}
-                            </span>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleRemoveNewOrderItem(index)}
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      </Card>
-                    );
-                  })}
-                </div>
-              </div>
-              {newOrder.items.length > 0 && (
-                <div className="p-4 border-t border-gray-200 bg-gray-50">
-                  <div className="text-right font-semibold">
-                    Total: $
-                    {newOrder.items
-                      .reduce(
-                        (total, item) => total + item.price * item.quantity,
-                        0
-                      )
-                      .toFixed(2)}
-                  </div>
-                </div>
-              )}
-              <DialogFooter className="px-6 py-4 border-t border-gray-200">
-                <Button
-                  className="w-full"
-                  onClick={handleSaveNewOrder}
-                  disabled={
-                    newOrder.items.length === 0 || !newOrder.customerName
-                  }
+          <nav className="hidden md:flex items-center space-x-8">
+            {["Home", "Menu", "About", "Contact"].map((item, i) => (
+              <motion.div
+                key={item}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: i * 0.1 + 0.3 }}
+              >
+                <Link
+                  href={`#${item.toLowerCase()}`}
+                  className="text-[#7D6E63] hover:text-[#A67C52] text-sm"
                 >
-                  Create Order
-                </Button>
-              </DialogFooter>
+                  {item}
+                </Link>
+              </motion.div>
+            ))}
+          </nav>
+
+          <div className="flex items-center gap-5">
+            {[Search, ShoppingBag].map((Icon, i) => (
+              <motion.div
+                key={i}
+                whileHover={{ scale: 1.2, rotate: [0, 10, -10, 0] }}
+                transition={{ duration: 0.5 }}
+              >
+                <Icon className="h-4 w-4 text-[#7D6E63] hover:text-[#A67C52] cursor-pointer" />
+              </motion.div>
+            ))}
+            <Menu className="h-5 w-5 text-[#7D6E63] md:hidden" />
+          </div>
+        </div>
+      </motion.header>
+
+      {/* Hero Section */}
+      <section className="pt-28 pb-16 md:pt-36 md:pb-24" id="home">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-12">
+            <motion.div
+              className="md:w-1/2 space-y-6"
+              initial="hidden"
+              animate="visible"
+              variants={staggerContainer}
+            >
+              <motion.div variants={fadeIn}>
+                <motion.div
+                  initial={{ opacity: 0, scale: 0 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.5, delay: 0.2 }}
+                  className="inline-block bg-[#E9DCC9] text-[#A67C52] px-3 py-1 rounded-full text-xs mb-4"
+                >
+                  ☕ Now Open 7am-7pm
+                </motion.div>
+                <h1 className="text-4xl md:text-5xl lg:text-6xl font-medium text-[#5C4738] leading-tight">
+                  A <span className="text-[#A67C52]">cozy</span> little break in
+                  your day
+                </h1>
+              </motion.div>
+              <motion.p
+                variants={fadeIn}
+                className="text-[#7D6E63] max-w-md text-sm md:text-base"
+              >
+                Handcrafted coffee and homemade pastries in our adorable space
+                designed for comfort and smiles.
+              </motion.p>
+              <motion.div variants={fadeIn} className="pt-4">
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Button className="bg-[#A67C52] hover:bg-[#8A6642] text-white rounded-full px-6 h-10 shadow-md">
+                    View Menu
+                  </Button>
+                </motion.div>
+              </motion.div>
+            </motion.div>
+            <motion.div
+              className="md:w-1/2 mt-8 md:mt-0 flex justify-center items-center"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.7, delay: 0.3 }}
+            >
+              <div className="w-full max-w-md h-[400px] relative">
+                <AnimatedCoffee />
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* Featured Products */}
+      <motion.section
+        id="menu"
+        className="py-16 md:py-24 bg-white rounded-t-[40px]"
+        ref={featuredRef}
+        initial="hidden"
+        animate={featuredInView ? "visible" : "hidden"}
+        variants={staggerContainer}
+      >
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            variants={fadeIn}
+            className="flex items-end justify-between mb-12"
+          >
+            <div>
+              <h2 className="text-2xl md:text-3xl font-medium text-[#5C4738]">
+                Our Specialties
+              </h2>
+              <p className="text-[#7D6E63] text-sm mt-2">
+                Crafted with care, served with love
+              </p>
+            </div>
+            <Link
+              href="#"
+              className="text-[#A67C52] text-sm flex items-center gap-1 hover:underline"
+            >
+              View all <ArrowRight className="h-3 w-3" />
+            </Link>
+          </motion.div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[
+              {
+                name: "Caramel Macchiato",
+                price: "$4.50",
+                image: "/placeholder.svg?height=400&width=400",
+                rating: 4.9,
+              },
+              {
+                name: "Matcha Latte",
+                price: "$5.25",
+                image: "/placeholder.svg?height=400&width=400",
+                rating: 4.7,
+              },
+              {
+                name: "Mocha",
+                price: "$4.75",
+                image: "/placeholder.svg?height=400&width=400",
+                rating: 4.8,
+              },
+            ].map((item, index) => (
+              <motion.div key={index} className="group" variants={popUp}>
+                <div className="relative aspect-square w-full overflow-hidden mb-4 bg-[#FAF3E8] rounded-3xl shadow-sm">
+                  <Image
+                    src={item.image || "/placeholder.svg"}
+                    alt={item.name}
+                    fill
+                    className="object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                  <motion.div
+                    className="absolute top-3 right-3 bg-white px-2 py-1 rounded-full shadow-sm flex items-center gap-1"
+                    whileHover={{ scale: 1.1 }}
+                  >
+                    <Star className="h-3 w-3 text-[#E6B325] fill-[#E6B325]" />
+                    <span className="text-xs text-[#5C4738]">
+                      {item.rating}
+                    </span>
+                  </motion.div>
+                </div>
+                <div className="flex justify-between items-center">
+                  <h3 className="text-[#5C4738] font-medium">{item.name}</h3>
+                  <span className="text-[#A67C52] font-medium">
+                    {item.price}
+                  </span>
+                </div>
+                <motion.button
+                  className="mt-2 text-sm text-[#7D6E63] hover:text-[#A67C52] flex items-center gap-1"
+                  whileHover={{ x: 5 }}
+                >
+                  Add to cart <ArrowRight className="h-3 w-3" />
+                </motion.button>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </motion.section>
+
+      {/* About Section */}
+      <motion.section
+        id="about"
+        className="py-16 md:py-24 bg-[#FAF3E8]"
+        ref={aboutRef}
+        initial="hidden"
+        animate={aboutInView ? "visible" : "hidden"}
+        variants={staggerContainer}
+      >
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row items-center gap-12">
+            <motion.div variants={fadeIn} className="md:w-1/2">
+              <div className="relative aspect-square w-full overflow-hidden rounded-3xl shadow-lg">
+                <Image
+                  src="/placeholder.svg?height=600&width=600"
+                  alt="Coffee brewing process"
+                  fill
+                  className="object-cover"
+                />
+                <motion.div
+                  className="absolute -top-4 -left-4 bg-white p-4 rounded-2xl shadow-md"
+                  initial={{ rotate: -10, scale: 0 }}
+                  animate={{ rotate: 0, scale: 1 }}
+                  transition={{ delay: 0.5, type: "spring", stiffness: 200 }}
+                >
+                  <Coffee className="h-6 w-6 text-[#A67C52]" />
+                </motion.div>
+              </div>
+            </motion.div>
+            <motion.div
+              variants={fadeIn}
+              className="md:w-1/2 space-y-6 mt-8 md:mt-0"
+            >
+              <h2 className="text-2xl md:text-3xl font-medium text-[#5C4738]">
+                Our Story
+              </h2>
+              <p className="text-[#7D6E63] text-sm md:text-base">
+                Founded in 2020, Brian Coffee was born from a passion for
+                quality coffee and creating cute, cozy spaces. We believe in
+                bringing joy to your day through delightful drinks and a
+                cheerful atmosphere.
+              </p>
+              <p className="text-[#7D6E63] text-sm md:text-base">
+                Every bean is ethically sourced and carefully roasted to bring
+                out its unique character. Our adorable approach extends from our
+                interior design to our menu—focusing on quality and happiness.
+              </p>
+              <div className="pt-2">
+                <motion.div whileHover={{ x: 5 }}>
+                  <Link
+                    href="#"
+                    className="text-[#A67C52] text-sm flex items-center gap-1 hover:underline"
+                  >
+                    Learn more about our process{" "}
+                    <ArrowRight className="h-3 w-3" />
+                  </Link>
+                </motion.div>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </motion.section>
+
+      {/* Testimonial */}
+      <motion.section
+        className="py-16 md:py-24 bg-white rounded-t-[40px]"
+        ref={testimonialRef}
+        initial="hidden"
+        animate={testimonialInView ? "visible" : "hidden"}
+        variants={fadeIn}
+      >
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.5 }}
+            className="inline-block bg-[#E9DCC9] text-[#A67C52] px-3 py-1 rounded-full text-xs mb-4"
+          >
+            ❤️ Customer Love
+          </motion.div>
+          <h2 className="text-2xl md:text-3xl font-medium text-[#5C4738] mb-8">
+            What Our Customers Say
+          </h2>
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
+            className="bg-[#FAF3E8] p-8 rounded-3xl shadow-md relative"
+          >
+            <blockquote className="text-[#7D6E63] text-lg md:text-xl italic">
+              "The cutest coffee shop I've ever been to! The latte art made my
+              day, and the atmosphere is so cheerful and welcoming."
+            </blockquote>
+            <div className="mt-6 flex items-center justify-center gap-2">
+              <div className="h-10 w-10 rounded-full bg-[#E9DCC9] flex items-center justify-center">
+                <span className="text-[#A67C52] font-medium">E</span>
+              </div>
+              <p className="text-[#A67C52] font-medium">
+                Emma, Regular Customer
+              </p>
+            </div>
+            <motion.div
+              className="absolute -top-4 -right-4"
+              animate={{ rotate: [0, 10, -10, 10, 0] }}
+              transition={{
+                repeat: Number.POSITIVE_INFINITY,
+                repeatDelay: 5,
+                duration: 1,
+              }}
+            >
+              <div className="bg-white h-8 w-8 rounded-full shadow-md flex items-center justify-center">
+                <Heart className="h-4 w-4 text-[#A67C52] fill-[#A67C52]" />
+              </div>
+            </motion.div>
+          </motion.div>
+        </div>
+      </motion.section>
+
+      {/* Location */}
+      <motion.section
+        id="contact"
+        className="py-16 md:py-24 bg-[#FAF3E8]"
+        ref={contactRef}
+        initial="hidden"
+        animate={contactInView ? "visible" : "hidden"}
+        variants={staggerContainer}
+      >
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row items-center gap-12">
+            <motion.div variants={fadeIn} className="md:w-1/2 space-y-6">
+              <h2 className="text-2xl md:text-3xl font-medium text-[#5C4738]">
+                Visit Us
+              </h2>
+              <div className="space-y-6">
+                <motion.div
+                  className="bg-white p-4 rounded-2xl shadow-sm flex items-start gap-4"
+                  whileHover={{ y: -5 }}
+                  transition={{ type: "spring", stiffness: 300 }}
+                >
+                  <div className="bg-[#E9DCC9] p-2 rounded-xl">
+                    <MapPin className="h-5 w-5 text-[#A67C52]" />
+                  </div>
+                  <div>
+                    <h3 className="text-[#A67C52] font-medium mb-1">Address</h3>
+                    <p className="text-[#7D6E63] text-sm">
+                      123 Cute Street, Cityville
+                    </p>
+                  </div>
+                </motion.div>
+                <motion.div
+                  className="bg-white p-4 rounded-2xl shadow-sm flex items-start gap-4"
+                  whileHover={{ y: -5 }}
+                  transition={{ type: "spring", stiffness: 300 }}
+                >
+                  <div className="bg-[#E9DCC9] p-2 rounded-xl">
+                    <Clock className="h-5 w-5 text-[#A67C52]" />
+                  </div>
+                  <div>
+                    <h3 className="text-[#A67C52] font-medium mb-1">Hours</h3>
+                    <p className="text-[#7D6E63] text-sm">
+                      Monday–Friday: 7am–7pm
+                    </p>
+                    <p className="text-[#7D6E63] text-sm">
+                      Saturday–Sunday: 8am–6pm
+                    </p>
+                  </div>
+                </motion.div>
+                <motion.div
+                  className="bg-white p-4 rounded-2xl shadow-sm flex items-start gap-4"
+                  whileHover={{ y: -5 }}
+                  transition={{ type: "spring", stiffness: 300 }}
+                >
+                  <div className="bg-[#E9DCC9] p-2 rounded-xl">
+                    <Coffee className="h-5 w-5 text-[#A67C52]" />
+                  </div>
+                  <div>
+                    <h3 className="text-[#A67C52] font-medium mb-1">Contact</h3>
+                    <p className="text-[#7D6E63] text-sm">
+                      hello@briancoffee.com
+                    </p>
+                    <p className="text-[#7D6E63] text-sm">+1 (555) 123-4567</p>
+                  </div>
+                </motion.div>
+              </div>
+            </motion.div>
+            <motion.div variants={fadeIn} className="md:w-1/2 mt-8 md:mt-0">
+              <div className="relative aspect-[4/3] w-full overflow-hidden rounded-3xl shadow-lg">
+                <Image
+                  src="/placeholder.svg?height=600&width=800"
+                  alt="Map location"
+                  fill
+                  className="object-cover"
+                />
+                <motion.div
+                  className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
+                  animate={{ scale: [1, 1.2, 1] }}
+                  transition={{ repeat: Number.POSITIVE_INFINITY, duration: 2 }}
+                >
+                  <div className="bg-[#A67C52] h-6 w-6 rounded-full flex items-center justify-center">
+                    <div className="bg-white h-2 w-2 rounded-full"></div>
+                  </div>
+                </motion.div>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </motion.section>
+
+      {/* Newsletter */}
+      <motion.section
+        className="py-16 md:py-24 bg-[#E9DCC9] rounded-t-[40px]"
+        ref={newsletterRef}
+        initial="hidden"
+        animate={newsletterInView ? "visible" : "hidden"}
+        variants={fadeIn}
+      >
+        <div className="max-w-xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <motion.div
+            initial={{ y: -20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.2 }}
+          >
+            <h2 className="text-2xl md:text-3xl font-medium text-[#5C4738] mb-4">
+              Stay Connected
+            </h2>
+            <p className="text-[#7D6E63] text-sm mb-8">
+              Subscribe to our newsletter for updates, special offers, and
+              coffee wisdom.
+            </p>
+          </motion.div>
+          <motion.div
+            className="flex flex-col sm:flex-row gap-3"
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.4 }}
+          >
+            <input
+              type="email"
+              placeholder="Your email address"
+              className="flex-1 px-4 py-3 text-sm border-2 border-white rounded-full focus:outline-none focus:border-[#A67C52]"
+            />
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <Button className="bg-[#A67C52] hover:bg-[#8A6642] text-white rounded-full px-6 h-12 shadow-md w-full sm:w-auto">
+                Subscribe
+              </Button>
+            </motion.div>
+          </motion.div>
+        </div>
+      </motion.section>
+
+      {/* Footer */}
+      <footer className="py-12 bg-white">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row justify-between gap-8">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2 }}
+            >
+              <motion.div
+                className="flex items-center gap-2 mb-4"
+                whileHover={{ scale: 1.05 }}
+              >
+                <Coffee className="h-4 w-4 text-[#A67C52]" />
+                <span className="text-[#A67C52] font-medium">Brian Coffee</span>
+              </motion.div>
+              <p className="text-[#7D6E63] text-sm max-w-xs">
+                A cute coffee experience focused on quality and bringing smiles
+                to your day.
+              </p>
+            </motion.div>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
+              {[
+                {
+                  title: "Menu",
+                  links: ["Coffee", "Tea", "Pastries"],
+                },
+                {
+                  title: "Company",
+                  links: ["About", "Careers", "Contact"],
+                },
+                {
+                  title: "Follow",
+                  links: ["Instagram", "Twitter", "Facebook"],
+                },
+              ].map((section, i) => (
+                <motion.div
+                  key={section.title}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 + i * 0.1 }}
+                >
+                  <h3 className="text-[#5C4738] font-medium mb-4 text-sm">
+                    {section.title}
+                  </h3>
+                  <ul className="space-y-2 text-sm">
+                    {section.links.map((link, j) => (
+                      <motion.li key={link} whileHover={{ x: 5 }}>
+                        <Link
+                          href="#"
+                          className="text-[#7D6E63] hover:text-[#A67C52]"
+                        >
+                          {link}
+                        </Link>
+                      </motion.li>
+                    ))}
+                  </ul>
+                </motion.div>
+              ))}
             </div>
           </div>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={isDeleteConfirmOpen} onOpenChange={setIsDeleteConfirmOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Confirm Delete</DialogTitle>
-          </DialogHeader>
-          <div className="py-4">
-            <p>Are you sure you want to delete this order?</p>
-            {orderToDelete && (
-              <p className="font-semibold mt-2">
-                Order for: {orderToDelete.customerName}
-              </p>
-            )}
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsDeleteConfirmOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button variant="destructive" onClick={confirmDeleteOrder}>
-              Delete
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          <motion.div
+            className="border-t border-[#E9DCC9] mt-12 pt-8 text-center text-[#7D6E63] text-xs"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.6 }}
+          >
+            <p>
+              © {new Date().getFullYear()} Brian Coffee. All rights reserved.
+            </p>
+          </motion.div>
+        </div>
+      </footer>
     </div>
   );
 }
