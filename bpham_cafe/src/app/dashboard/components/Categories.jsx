@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Plus, Edit, Trash2, ChevronRight, Coffee } from "lucide-react";
-
+import { useDispatch, useSelector } from "react-redux";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -30,6 +30,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  selectAllCategories,
+  createCategory,
+} from "@/store/reducers/categorySlice";
 
 // Sample data - replace with your actual data
 const initialCategories = [
@@ -195,21 +199,23 @@ const menuItemsByCategory = {
 };
 
 export default function CategoriesManager() {
+  const dispatch = useDispatch();
   const [categories, setCategories] = useState(initialCategories);
   const [newCategoryName, setNewCategoryName] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [menuItems, setMenuItems] = useState([]);
+  const allCategories = useSelector(selectAllCategories);
 
-  const handleAddCategory = () => {
+  const handleAddCategory = async () => {
     if (newCategoryName.trim() === "") return;
-
+    console.log("Adding category:", newCategoryName);
+    await dispatch(createCategory({ newCategory: newCategoryName }));
     const newCategory = {
       id: categories.length + 1,
       name: newCategoryName,
       itemCount: 0,
     };
-
     setCategories([...categories, newCategory]);
     setNewCategoryName("");
     setIsDialogOpen(false);
@@ -256,7 +262,6 @@ export default function CategoriesManager() {
             </div>
             <DialogFooter>
               <Button
-                type="submit"
                 onClick={handleAddCategory}
                 className="bg-[#8C7851] hover:bg-[#6F5B3E] text-white"
               >
