@@ -12,6 +12,17 @@ export const createCategory = createAsyncThunk(
   }
 );
 
+export const deleteCategory = createAsyncThunk(
+  "category/deleteCategory",
+  async (category) => {
+    const { data } = await axios.post(
+      "api/categories/deletecategory",
+      category
+    );
+    return data;
+  }
+);
+
 export const findAllCategories = createAsyncThunk(
   "category/findAllCategories",
   async () => {
@@ -36,6 +47,12 @@ export const categorySlice = createSlice({
       })
       .addCase(findAllCategories.fulfilled, (state, action) => {
         state.allCategories = action.payload.categories;
+      })
+      .addCase(deleteCategory.fulfilled, (state, action) => {
+        let deletedCategory = action.payload.category;
+        state.allCategories = state.allCategories.filter(
+          (category) => category.id !== deletedCategory.id
+        );
       });
   },
 });

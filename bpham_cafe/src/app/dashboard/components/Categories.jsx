@@ -34,6 +34,7 @@ import {
   selectAllCategories,
   createCategory,
   findAllCategories,
+  deleteCategory,
 } from "@/store/reducers/categorySlice";
 
 // Sample data - replace with your actual data
@@ -204,6 +205,8 @@ export default function CategoriesManager() {
   const [categories, setCategories] = useState(initialCategories);
   const [newCategoryName, setNewCategoryName] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isDeleteCategoryOpen, setIsDeleteCategoryOpen] = useState(false);
+  const [confirmedDelete, setConfirmedDelete] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [menuItems, setMenuItems] = useState([]);
   const allCategories = useSelector(selectAllCategories);
@@ -227,6 +230,11 @@ export default function CategoriesManager() {
     setCategories([...categories, newCategory]);
     setNewCategoryName("");
     setIsDialogOpen(false);
+  };
+
+  const handleDeleteCategory = async (categoryId) => {
+    await dispatch(deleteCategory({ id: categoryId }));
+    setIsDeleteCategoryOpen(false);
   };
 
   const handleCategoryClick = (categoryId) => {
@@ -390,7 +398,7 @@ export default function CategoriesManager() {
                           className="h-8 w-8 text-red-500"
                           onClick={(e) => {
                             e.stopPropagation();
-                            // Delete functionality would go here
+                            handleDeleteCategory(category.id);
                           }}
                         >
                           <Trash2 className="h-4 w-4" />
