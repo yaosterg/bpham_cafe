@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus, Edit, Trash2, ChevronRight, Coffee } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { Button } from "@/components/ui/button";
@@ -33,6 +33,7 @@ import {
 import {
   selectAllCategories,
   createCategory,
+  findAllCategories,
 } from "@/store/reducers/categorySlice";
 
 // Sample data - replace with your actual data
@@ -207,6 +208,13 @@ export default function CategoriesManager() {
   const [menuItems, setMenuItems] = useState([]);
   const allCategories = useSelector(selectAllCategories);
 
+  useEffect(() => {
+    const fetchCategories = async () => {
+      await dispatch(findAllCategories());
+    };
+    fetchCategories();
+  }, []);
+
   const handleAddCategory = async () => {
     if (newCategoryName.trim() === "") return;
     console.log("Adding category:", newCategoryName);
@@ -294,7 +302,7 @@ export default function CategoriesManager() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {categories.map((category) => (
+                {/* {categories.map((category) => (
                   <TableRow
                     key={category.id}
                     className={`cursor-pointer hover:bg-[#F9F5F1] ${
@@ -308,6 +316,55 @@ export default function CategoriesManager() {
                           <ChevronRight className="mr-2 h-4 w-4 text-[#8C7851]" />
                         )}
                         {category.name}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right text-[#8C7851]">
+                      {category.itemCount}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-[#8C7851]"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            // Edit functionality would go here
+                          }}
+                        >
+                          <Edit className="h-4 w-4" />
+                          <span className="sr-only">Edit</span>
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-red-500"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            // Delete functionality would go here
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          <span className="sr-only">Delete</span>
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))} */}
+                {allCategories.map((category) => (
+                  <TableRow
+                    key={category.id}
+                    className={`cursor-pointer hover:bg-[#F9F5F1] ${
+                      selectedCategory === category.id ? "bg-[#F9F5F1]" : ""
+                    }`}
+                    onClick={() => handleCategoryClick(category.id)}
+                  >
+                    <TableCell className="font-medium text-[#5F4B32]">
+                      <div className="flex items-center">
+                        {selectedCategory === category.id && (
+                          <ChevronRight className="mr-2 h-4 w-4 text-[#8C7851]" />
+                        )}
+                        {category.category}
                       </div>
                     </TableCell>
                     <TableCell className="text-right text-[#8C7851]">

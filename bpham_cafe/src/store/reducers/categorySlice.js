@@ -12,6 +12,14 @@ export const createCategory = createAsyncThunk(
   }
 );
 
+export const findAllCategories = createAsyncThunk(
+  "category/findAllCategories",
+  async () => {
+    const { data } = await axios.get("api/categories/getcategories");
+    return data;
+  }
+);
+
 export const categorySlice = createSlice({
   name: "categories",
   initialState: {
@@ -19,9 +27,16 @@ export const categorySlice = createSlice({
   },
   reducers: {},
   extraReducers: (builder) => {
-    builder.addCase(createCategory.fulfilled, (state, action) => {
-      state.allCategories.push(action.payload.category);
-    });
+    builder
+      .addCase(createCategory.fulfilled, (state, action) => {
+        state.allCategories.push(action.payload.category);
+        state.allCategories = state.allCategories.sort((a, b) =>
+          a.category.localeCompare(b.category)
+        );
+      })
+      .addCase(findAllCategories.fulfilled, (state, action) => {
+        state.allCategories = action.payload.categories;
+      });
   },
 });
 
