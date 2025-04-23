@@ -34,6 +34,7 @@ import {
   selectAllCategories,
   createCategory,
   findAllCategories,
+  updateCategory,
   deleteCategory,
 } from "@/store/reducers/categorySlice";
 
@@ -232,6 +233,12 @@ export default function CategoriesManager() {
     setIsDialogOpen(false);
   };
 
+  const handleUpdateCategory = async (category) => {
+    await dispatch(updateCategory(category));
+    setNewCategoryName("");
+    setIsDialogOpen(false);
+  };
+
   const handleDeleteCategory = async (categoryId) => {
     await dispatch(deleteCategory({ id: categoryId }));
     setIsDeleteCategoryOpen(false);
@@ -380,18 +387,64 @@ export default function CategoriesManager() {
                     </TableCell>
                     <TableCell>
                       <div className="flex justify-end gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-[#8C7851]"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            // Edit functionality would go here
-                          }}
+                        <Dialog
+                          open={isDialogOpen}
+                          onOpenChange={setIsDialogOpen}
                         >
-                          <Edit className="h-4 w-4" />
-                          <span className="sr-only">Edit</span>
-                        </Button>
+                          <DialogTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-[#8C7851]"
+                            >
+                              <Edit className="h-4 w-4" />
+                              <span className="sr-only">Edit</span>
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="sm:max-w-[425px] bg-white">
+                            <DialogHeader>
+                              <DialogTitle className="text-[#5F4B32]">
+                                Change Category Title
+                              </DialogTitle>
+                              <DialogDescription className="text-[#8C7851]">
+                                Adjust the name of the categories.
+                              </DialogDescription>
+                            </DialogHeader>
+                            <div className="grid gap-4 py-4">
+                              <div className="grid grid-cols-4 items-center gap-4">
+                                <Label
+                                  htmlFor="name"
+                                  className="text-right text-[#5F4B32]"
+                                >
+                                  Name
+                                </Label>
+                                <Input
+                                  id="name"
+                                  value={newCategoryName}
+                                  onChange={(e) =>
+                                    setNewCategoryName(e.target.value)
+                                  }
+                                  className="col-span-3 border-[#E6DDD1]"
+                                  placeholder={category.category}
+                                />
+                              </div>
+                            </div>
+                            <DialogFooter>
+                              <Button
+                                onClick={() =>
+                                  handleUpdateCategory({
+                                    id: category.id,
+                                    name: newCategoryName,
+                                  })
+                                }
+                                className="bg-[#8C7851] hover:bg-[#6F5B3E] text-white"
+                              >
+                                Save
+                              </Button>
+                            </DialogFooter>
+                          </DialogContent>
+                        </Dialog>
+
                         <Button
                           variant="ghost"
                           size="icon"

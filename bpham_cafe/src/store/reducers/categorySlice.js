@@ -12,6 +12,17 @@ export const createCategory = createAsyncThunk(
   }
 );
 
+export const updateCategory = createAsyncThunk(
+  "category/updateCategory",
+  async (category) => {
+    const { data } = await axios.put(
+      `api/categories/updatecategory/${category.id}`,
+      category
+    );
+    return data;
+  }
+);
+
 export const deleteCategory = createAsyncThunk(
   "category/deleteCategory",
   async (category) => {
@@ -47,6 +58,17 @@ export const categorySlice = createSlice({
       })
       .addCase(findAllCategories.fulfilled, (state, action) => {
         state.allCategories = action.payload.categories;
+      })
+      .addCase(updateCategory.fulfilled, (state, action) => {
+        let updatedCategory = action.payload;
+        state.allCategories.map((category) => {
+          if (category.id === updatedCategory.id) {
+            category.category = updatedCategory.category;
+          }
+        });
+        state.allCategories = state.allCategories.sort((a, b) =>
+          a.category.localeCompare(b.category)
+        );
       })
       .addCase(deleteCategory.fulfilled, (state, action) => {
         let deletedCategory = action.payload.category;
