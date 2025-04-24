@@ -206,8 +206,8 @@ export default function CategoriesManager() {
   const [categories, setCategories] = useState(initialCategories);
   const [newCategoryName, setNewCategoryName] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isDeleteCategoryOpen, setIsDeleteCategoryOpen] = useState(false);
-  const [confirmedDelete, setConfirmedDelete] = useState(false);
+  const [isEditCategoryOpen, setIsEditCategoryOpen] = useState(false);
+  const [editingCategory, setEditingCategory] = useState({});
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [menuItems, setMenuItems] = useState([]);
   const allCategories = useSelector(selectAllCategories);
@@ -233,10 +233,14 @@ export default function CategoriesManager() {
     setIsDialogOpen(false);
   };
 
-  const handleUpdateCategory = async (category) => {
-    await dispatch(updateCategory(category));
+  const handleUpdateCategory = async () => {
+    if (newCategoryName.trim() === "") return;
+
+    await dispatch(
+      updateCategory({ original: editingCategory, newName: newCategoryName })
+    );
     setNewCategoryName("");
-    setIsDialogOpen(false);
+    setIsEditCategoryOpen(false);
   };
 
   const handleDeleteCategory = async (categoryId) => {
@@ -388,14 +392,15 @@ export default function CategoriesManager() {
                     <TableCell>
                       <div className="flex justify-end gap-2">
                         <Dialog
-                          open={isDialogOpen}
-                          onOpenChange={setIsDialogOpen}
+                          open={isEditCategoryOpen}
+                          onOpenChange={setIsEditCategoryOpen}
                         >
                           <DialogTrigger asChild>
                             <Button
                               variant="ghost"
                               size="icon"
                               className="h-8 w-8 text-[#8C7851]"
+                              onClick={() => setEditingCategory(category)}
                             >
                               <Edit className="h-4 w-4" />
                               <span className="sr-only">Edit</span>
@@ -431,12 +436,7 @@ export default function CategoriesManager() {
                             </div>
                             <DialogFooter>
                               <Button
-                                onClick={() =>
-                                  handleUpdateCategory({
-                                    id: category.id,
-                                    name: newCategoryName,
-                                  })
-                                }
+                                onClick={() => handleUpdateCategory()}
                                 className="bg-[#8C7851] hover:bg-[#6F5B3E] text-white"
                               >
                                 Save
