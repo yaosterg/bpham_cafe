@@ -58,9 +58,7 @@ export default function CoffeeDashboard() {
   return (
     <div className="flex flex-col gap-5 p-6 bg-[#F9F5F1]">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-[#5F4B32]">
-          Brian Coffee Dashboard
-        </h1>
+        <h1 className="text-3xl font-bold text-[#5F4B32]">Bakery Dashboard</h1>
         <div className="flex items-center gap-2">
           <Button variant="outline" className="border-[#8C7851] text-[#5F4B32]">
             <Clock className="mr-2 h-4 w-4" />
