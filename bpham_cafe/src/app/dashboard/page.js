@@ -19,6 +19,7 @@ import { Quicksand } from "next/font/google";
 import CoffeeDashboard from "./components/Dashboard";
 import CategoriesManager from "./components/Categories";
 import Ingredients from "./components/Ingredients";
+import Order from "./components/Queue";
 
 // Initialize Quicksand font
 const quicksand = Quicksand({
@@ -159,6 +160,8 @@ export default function BrianCoffeeDashboard() {
                 <CategoriesManager />
               ) : activeTab === "ingredients" ? (
                 <Ingredients />
+              ) : activeTab === "queue" ? (
+                <Order />
               ) : (
                 <div className="text-center p-8 bg-white rounded-2xl shadow-sm max-w-md">
                   <div className="bg-[#E9DCC9] p-4 rounded-full inline-block mb-4">

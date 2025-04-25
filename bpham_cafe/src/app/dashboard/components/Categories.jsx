@@ -37,6 +37,7 @@ import {
   updateCategory,
   deleteCategory,
 } from "@/store/reducers/categorySlice";
+import CategoryItems from "./CategoryItems";
 
 // Sample data - replace with your actual data
 const initialCategories = [
@@ -467,7 +468,9 @@ export default function CategoriesManager() {
         </Card>
 
         <Card className="md:col-span-8 border-[#E6DDD1] bg-white">
-          <CardHeader>
+          <CategoryItems />
+          {/* <CardHeader>
+            <CategoryItems />
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle className="text-[#5F4B32]">
@@ -573,7 +576,7 @@ export default function CategoriesManager() {
                 </p>
               </div>
             )}
-          </CardContent>
+          </CardContent> */}
         </Card>
       </div>
     </div>
