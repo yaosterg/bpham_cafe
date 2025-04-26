@@ -20,6 +20,19 @@ export const createIngredient = createAsyncThunk(
   }
 );
 
+export const batchCreateIngredients = createAsyncThunk(
+  "ingredient/batchCreateIngredients",
+  async (file) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    const { data } = await axios.post(
+      "api/ingredients/createingredient/batchcreate",
+      formData
+    );
+    return data;
+  }
+);
+
 export const ingredientSlice = createSlice({
   name: "ingredients",
   initialState: {

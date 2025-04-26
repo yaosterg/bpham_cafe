@@ -1,8 +1,16 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Plus, Edit, Trash, Coffee, Search } from "lucide-react";
+import {
+  Plus,
+  Edit,
+  Trash,
+  Coffee,
+  Search,
+  FileSpreadsheet,
+  Upload,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -15,6 +23,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import {
   AlertDialog,
@@ -41,69 +50,10 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import {
   createIngredient,
+  batchCreateIngredients,
   findAllIngredients,
   selectAllIngredients,
 } from "@/store/reducers/ingredientSlice";
-
-// Sample data for Brian's Coffee with source added
-const initialIngredients = [
-  {
-    id: "ing-001",
-    name: "Premium Arabica Beans",
-    source: "Colombian Farms",
-    price: 15.99,
-    unit: "lb",
-  },
-  {
-    id: "ing-002",
-    name: "Organic Whole Milk",
-    source: "Happy Valley Dairy",
-    price: 3.49,
-    unit: "gallon",
-  },
-  {
-    id: "ing-003",
-    name: "Raw Cane Sugar",
-    source: "Sweet Harvest Co.",
-    price: 2.99,
-    unit: "lb",
-  },
-  {
-    id: "ing-004",
-    name: "Vanilla Bean Syrup",
-    source: "Flavor Essentials",
-    price: 8.99,
-    unit: "bottle",
-  },
-  {
-    id: "ing-005",
-    name: "Dark Chocolate Sauce",
-    source: "Cocoa Delights",
-    price: 7.49,
-    unit: "bottle",
-  },
-  {
-    id: "ing-006",
-    name: "Salted Caramel Sauce",
-    source: "Sweet & Savory Inc.",
-    price: 6.99,
-    unit: "bottle",
-  },
-  {
-    id: "ing-007",
-    name: "Fresh Whipped Cream",
-    source: "Dairy Fresh",
-    price: 4.29,
-    unit: "can",
-  },
-  {
-    id: "ing-008",
-    name: "Ceylon Cinnamon",
-    source: "Spice Traders",
-    price: 3.99,
-    unit: "jar",
-  },
-];
 
 // Form schema for adding a new ingredient (no ID required)
 const addFormSchema = z.object({
@@ -126,8 +76,12 @@ export default function Ingredients() {
   const [selectedIngredient, setSelectedIngredient] = useState(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [ingredientToEdit, setIngredientToEdit] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [uploadFile, setUploadFile] = useState(null);
+  const [uploadError, setUploadError] = useState("");
+  const fileInputRef = useRef(null);
   const ingredients = useSelector(selectAllIngredients);
   const dispatch = useDispatch();
 
@@ -160,14 +114,6 @@ export default function Ingredients() {
     const handleSubmit = async (values) => {
       const result = await dispatch(createIngredient(values));
       setIsAddDialogOpen(false);
-
-      // if (result.meta.requestStatus === "fulfilled") {
-      //   onSubmit(result);
-      //   setIsAddDialogOpen(false);
-      // } else {
-      //   // Optional: show an error toast or something
-      //   console.error("Failed to create ingredient");
-      // }
     };
 
     return (
@@ -271,6 +217,37 @@ export default function Ingredients() {
       </Form>
     );
   }
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    setUploadError("");
+
+    if (!file) {
+      setUploadFile(null);
+      return;
+    }
+
+    // Check if file is CSV
+    if (file.type !== "text/csv" && !file.name.endsWith(".csv")) {
+      setUploadError("Please upload a CSV file only.");
+      setUploadFile(null);
+      return;
+    }
+
+    setUploadFile(file);
+  };
+
+  const handleUpload = async () => {
+    if (!uploadFile) {
+      setUploadError("Please select a file to upload.");
+      return;
+    }
+    // In a real application, you would send the file to the backend here
+    // For demo purposes, we'll just show a success message
+    console.log("Uploading file:", uploadFile.name);
+    await dispatch(batchCreateIngredients(uploadFile));
+    setUploadFile(null);
+  };
 
   // Form for editing an existing ingredient (ID field included but disabled)
   function EditIngredientForm({ ingredient, onSubmit }) {
@@ -444,35 +421,132 @@ export default function Ingredients() {
       style={{ backgroundColor: "#F9F5F0" }}
     >
       {/* Ingredients List */}
-      <Card className="md:col-span-1 border-[#D6C8B8] bg-white">
+      <Card className="md:col-span-1 border-[#D6C8B8] bg-white min-w-[275px]">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 border-b border-[#D6C8B8]">
           <CardTitle className="text-[#8B6E4F] flex items-center">
             <Coffee className="h-5 w-5 mr-2 text-[#8B6E4F]" />
             Ingredients
           </CardTitle>
-          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-            <DialogTrigger asChild>
-              <Button
-                size="sm"
-                variant="outline"
-                className="h-8 w-8 p-0 rounded-md bg-[#8B6E4F] hover:bg-[#725A41] border-0"
-              >
-                <Plus className="h-4 w-4 text-white" />
-                <span className="sr-only">Add Ingredient</span>
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="bg-[#F9F5F0] border-[#D6C8B8]">
-              <DialogHeader>
-                <DialogTitle className="text-[#8B6E4F]">
-                  Add New Ingredient
-                </DialogTitle>
-                <DialogDescription>
-                  Fill in the details to add a new ingredient to your inventory.
-                </DialogDescription>
-              </DialogHeader>
-              <AddIngredientForm />
-            </DialogContent>
-          </Dialog>
+          <div className="flex space-x-2">
+            {/* CSV Upload Button */}
+            <Dialog
+              open={isUploadDialogOpen}
+              onOpenChange={setIsUploadDialogOpen}
+            >
+              <DialogTrigger asChild>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-8 w-8 p-0 rounded-md bg-[#8B6E4F] hover:bg-[#725A41] border-0"
+                >
+                  <FileSpreadsheet className="h-4 w-4 text-white" />
+                  <span className="sr-only">Upload CSV</span>
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="bg-[#F9F5F0] border-[#D6C8B8]">
+                <DialogHeader>
+                  <DialogTitle className="text-[#8B6E4F]">
+                    Upload Ingredients CSV
+                  </DialogTitle>
+                  <DialogDescription>
+                    Upload a CSV file to bulk import or update ingredients.
+                  </DialogDescription>
+                </DialogHeader>
+
+                <div className="space-y-4 py-4">
+                  <div className="bg-amber-50 border border-amber-200 rounded-md p-4 text-sm text-amber-800">
+                    <p className="font-medium mb-2">Please note:</p>
+                    <ul className="list-disc pl-5 space-y-1">
+                      <li>Upload only .csv files</li>
+                      <li>Required columns: id, name, source, price, unit</li>
+                      <li>Existing IDs will be updated</li>
+                      <li>Blank IDs will create new items</li>
+                      <li>All other fields of columns must not be empty</li>
+                    </ul>
+                  </div>
+
+                  <div className="flex flex-col space-y-2">
+                    <label
+                      htmlFor="csv-upload"
+                      className="text-[#8B6E4F] font-medium"
+                    >
+                      Select CSV File
+                    </label>
+                    <div className="flex items-center">
+                      <input
+                        type="file"
+                        id="csv-upload"
+                        accept=".csv"
+                        ref={fileInputRef}
+                        onChange={handleFileChange}
+                        className="hidden"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="border-[#D6C8B8] text-[#8B6E4F] hover:bg-[#F9F5F0] hover:text-[#5D4B35]"
+                        onClick={() => fileInputRef.current?.click()}
+                      >
+                        <Upload className="h-4 w-4 mr-2" />
+                        Browse...
+                      </Button>
+                      <span className="ml-3 text-sm text-[#8B6E4F]">
+                        {uploadFile ? uploadFile.name : "No file selected"}
+                      </span>
+                    </div>
+                    {uploadError && (
+                      <p className="text-red-500 text-sm">{uploadError}</p>
+                    )}
+                  </div>
+                </div>
+
+                <DialogFooter>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="border-[#D6C8B8] text-[#8B6E4F] hover:bg-[#F9F5F0]"
+                    onClick={() => setIsUploadDialogOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="button"
+                    className="bg-[#8B6E4F] hover:bg-[#725A41] text-white"
+                    onClick={handleUpload}
+                    disabled={!uploadFile}
+                  >
+                    Upload
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+
+            {/* Add Ingredient Button */}
+            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+              <DialogTrigger asChild>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-8 w-8 p-0 rounded-md bg-[#8B6E4F] hover:bg-[#725A41] border-0"
+                >
+                  <Plus className="h-4 w-4 text-white" />
+                  <span className="sr-only">Add Ingredient</span>
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="bg-[#F9F5F0] border-[#D6C8B8]">
+                <DialogHeader>
+                  <DialogTitle className="text-[#8B6E4F]">
+                    Add New Ingredient
+                  </DialogTitle>
+                  <DialogDescription>
+                    Fill in the details to add a new ingredient to your
+                    inventory.
+                  </DialogDescription>
+                </DialogHeader>
+                <AddIngredientForm onSubmit={handleUpload} />
+              </DialogContent>
+            </Dialog>
+          </div>
         </CardHeader>
         <CardContent className="p-4">
           <div className="relative mb-4">

@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Ingredient" ALTER COLUMN "price" SET DATA TYPE DOUBLE PRECISION;

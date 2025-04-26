@@ -18,7 +18,7 @@ model Ingredient {
   id        Int      @id @default(autoincrement())
   name String
   source String
-  price Int
+  price Float
   unit  String
 }
 
