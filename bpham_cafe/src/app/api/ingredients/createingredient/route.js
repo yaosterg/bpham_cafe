@@ -5,11 +5,12 @@ const prisma = new PrismaClient();
 export async function POST(req) {
   try {
     const formData = await req.json();
-    console.log("Form Data:", formData);
+    console.log("formData", formData);
 
-    const newIngredient = await prisma.category.create({
+    const newIngredient = await prisma.ingredient.create({
       data: formData,
     });
+    console.log("newIngredient", newIngredient);
 
     return new Response(
       JSON.stringify({

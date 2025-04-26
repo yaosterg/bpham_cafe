@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { Plus, Edit, Trash, Coffee, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -38,6 +39,11 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import {
+  createIngredient,
+  findAllIngredients,
+  selectAllIngredients,
+} from "@/store/reducers/ingredientSlice";
 
 // Sample data for Brian's Coffee with source added
 const initialIngredients = [
@@ -117,12 +123,20 @@ const editFormSchema = z.object({
 });
 
 export default function Ingredients() {
-  const [ingredients, setIngredients] = useState(initialIngredients);
   const [selectedIngredient, setSelectedIngredient] = useState(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [ingredientToEdit, setIngredientToEdit] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const ingredients = useSelector(selectAllIngredients);
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    const fetchIngredients = async () => {
+      await dispatch(findAllIngredients());
+    };
+    fetchIngredients();
+  }, []);
 
   // Filtered ingredients based on search query
   const filteredIngredients = ingredients.filter(
@@ -143,16 +157,18 @@ export default function Ingredients() {
       },
     });
 
-    function handleSubmit(values) {
-      // Generate a temporary ID for demo purposes
-      // In a real app, this would be handled by the database
-      const newId = `ing-${String(ingredients.length + 1).padStart(3, "0")}`;
+    const handleSubmit = async (values) => {
+      const result = await dispatch(createIngredient(values));
+      setIsAddDialogOpen(false);
 
-      onSubmit({
-        id: newId,
-        ...values,
-      });
-    }
+      // if (result.meta.requestStatus === "fulfilled") {
+      //   onSubmit(result);
+      //   setIsAddDialogOpen(false);
+      // } else {
+      //   // Optional: show an error toast or something
+      //   console.error("Failed to create ingredient");
+      // }
+    };
 
     return (
       <Form {...form}>
@@ -397,10 +413,6 @@ export default function Ingredients() {
   }
 
   // Event handlers
-  const handleAddIngredient = (ingredient) => {
-    setIngredients([...ingredients, ingredient]);
-    setIsAddDialogOpen(false);
-  };
 
   const handleEditIngredient = (updatedIngredient) => {
     setIngredients(
@@ -458,7 +470,7 @@ export default function Ingredients() {
                   Fill in the details to add a new ingredient to your inventory.
                 </DialogDescription>
               </DialogHeader>
-              <AddIngredientForm onSubmit={handleAddIngredient} />
+              <AddIngredientForm />
             </DialogContent>
           </Dialog>
         </CardHeader>
@@ -614,7 +626,7 @@ export default function Ingredients() {
                       inventory.
                     </DialogDescription>
                   </DialogHeader>
-                  <AddIngredientForm onSubmit={handleAddIngredient} />
+                  <AddIngredientForm />
                 </DialogContent>
               </Dialog>
             </div>

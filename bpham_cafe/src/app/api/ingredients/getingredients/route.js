@@ -11,7 +11,7 @@ export async function GET(req) {
     return new Response(
       JSON.stringify({
         message: "Ingredients founded successfully",
-        categories: allIngredients,
+        ingredients: allIngredients,
       })
     );
   } catch (error) {

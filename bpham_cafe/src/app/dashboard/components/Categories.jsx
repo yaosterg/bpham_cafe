@@ -224,12 +224,6 @@ export default function CategoriesManager() {
     if (newCategoryName.trim() === "") return;
     console.log("Adding category:", newCategoryName);
     await dispatch(createCategory({ newCategory: newCategoryName }));
-    const newCategory = {
-      id: categories.length + 1,
-      name: newCategoryName,
-      itemCount: 0,
-    };
-    setCategories([...categories, newCategory]);
     setNewCategoryName("");
     setIsDialogOpen(false);
   };

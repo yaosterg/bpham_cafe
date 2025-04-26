@@ -110,20 +110,6 @@ const MOCK_MENU_ITEMS = [
     imageUrl:
       "https://images.unsplash.com/photo-1579888944880-d98341245702?w=200&h=200&fit=crop&q=80",
   },
-  {
-    id: "5",
-    name: "Vanilla Latte",
-    description: "Espresso with steamed milk and vanilla syrup",
-    ingredients: [
-      { ingredientId: "1", quantity: 1 },
-      { ingredientId: "2", quantity: 3 },
-      { ingredientId: "7", quantity: 2 },
-    ],
-    cost: 4.25,
-    status: true,
-    imageUrl:
-      "https://images.unsplash.com/photo-1592318951566-70f4513fba6d?w=200&h=200&fit=crop&q=80",
-  },
 ];
 
 export default function CategoryItems({ categoryName = "Coffee Menu" }) {
