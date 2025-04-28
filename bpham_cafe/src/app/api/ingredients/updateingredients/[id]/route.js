@@ -9,12 +9,15 @@ export async function PUT(request, { params }) {
   console.log(id, body);
 
   try {
-    const updateIngredient = await prisma.ingredient.update({
+    const updatedIngredient = await prisma.ingredient.update({
       where: { id: Number(id.id) }, // or just id if it's a string
-      data: { category: body.newName },
+      data: body,
     });
 
-    return NextResponse.json(updateIngredient);
+    return NextResponse.json({
+      message: "Ingredient updated successfully",
+      updatedIngredient: updatedIngredient,
+    });
   } catch (error) {
     console.error("Update failed:", error);
     return NextResponse.json(

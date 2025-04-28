@@ -53,7 +53,12 @@ import {
   batchCreateIngredients,
   findAllIngredients,
   selectAllIngredients,
+  deleteIngredient,
+  updateIngredient,
+  selectEditedIngredient,
+  setEditedIngredient,
 } from "@/store/reducers/ingredientSlice";
+import CoffeeAnimation from "@/components/Loading";
 
 // Form schema for adding a new ingredient (no ID required)
 const addFormSchema = z.object({
@@ -65,7 +70,7 @@ const addFormSchema = z.object({
 
 // Form schema for editing an existing ingredient (ID included)
 const editFormSchema = z.object({
-  id: z.string().min(1, "ID is required"),
+  id: z.coerce.number().int().positive("ID must be a positive integer"),
   name: z.string().min(1, "Name is required"),
   source: z.string().min(1, "Source is required"),
   price: z.coerce.number().positive("Price must be positive"),
@@ -77,10 +82,11 @@ export default function Ingredients() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
-  const [ingredientToEdit, setIngredientToEdit] = useState(null);
+  const ingredientToEdit = useSelector(selectEditedIngredient);
   const [searchQuery, setSearchQuery] = useState("");
   const [uploadFile, setUploadFile] = useState(null);
   const [uploadError, setUploadError] = useState("");
+  const [loading, setLoading] = useState(false);
   const fileInputRef = useRef(null);
   const ingredients = useSelector(selectAllIngredients);
   const dispatch = useDispatch();
@@ -245,7 +251,10 @@ export default function Ingredients() {
     // In a real application, you would send the file to the backend here
     // For demo purposes, we'll just show a success message
     console.log("Uploading file:", uploadFile.name);
+    setLoading(true);
     await dispatch(batchCreateIngredients(uploadFile));
+    setLoading(false);
+    setIsUploadDialogOpen(false);
     setUploadFile(null);
   };
 
@@ -391,27 +400,19 @@ export default function Ingredients() {
 
   // Event handlers
 
-  const handleEditIngredient = (updatedIngredient) => {
-    setIngredients(
-      ingredients.map((ing) =>
-        ing.id === updatedIngredient.id ? updatedIngredient : ing
-      )
-    );
-    if (selectedIngredient?.id === updatedIngredient.id) {
-      setSelectedIngredient(updatedIngredient);
-    }
+  const handleEditIngredient = async (ingredientToEdit) => {
+    await dispatch(updateIngredient(ingredientToEdit));
+    setSelectedIngredient(ingredientToEdit);
     setIsEditDialogOpen(false);
   };
 
-  const handleDeleteIngredient = (id) => {
-    setIngredients(ingredients.filter((ing) => ing.id !== id));
-    if (selectedIngredient?.id === id) {
-      setSelectedIngredient(null);
-    }
+  const handleDeleteIngredient = async (ingredient) => {
+    await dispatch(deleteIngredient(ingredient));
+    setSelectedIngredient(null);
   };
 
-  const openEditDialog = (ingredient) => {
-    setIngredientToEdit(ingredient);
+  const openEditDialog = async (ingredient) => {
+    await dispatch(setEditedIngredient(ingredient));
     setIsEditDialogOpen(true);
   };
 
@@ -452,53 +453,61 @@ export default function Ingredients() {
                     Upload a CSV file to bulk import or update ingredients.
                   </DialogDescription>
                 </DialogHeader>
+                {loading ? (
+                  <CoffeeAnimation />
+                ) : (
+                  <>
+                    {" "}
+                    <div className="space-y-4 py-4">
+                      <div className="bg-amber-50 border border-amber-200 rounded-md p-4 text-sm text-amber-800">
+                        <p className="font-medium mb-2">Please note:</p>
+                        <ul className="list-disc pl-5 space-y-1">
+                          <li>Upload only .csv files</li>
+                          <li>
+                            Required columns: id, name, source, price, unit
+                          </li>
+                          <li>Existing IDs will be updated</li>
+                          <li>Blank IDs will create new items</li>
+                          <li>All other fields of columns must not be empty</li>
+                        </ul>
+                      </div>
 
-                <div className="space-y-4 py-4">
-                  <div className="bg-amber-50 border border-amber-200 rounded-md p-4 text-sm text-amber-800">
-                    <p className="font-medium mb-2">Please note:</p>
-                    <ul className="list-disc pl-5 space-y-1">
-                      <li>Upload only .csv files</li>
-                      <li>Required columns: id, name, source, price, unit</li>
-                      <li>Existing IDs will be updated</li>
-                      <li>Blank IDs will create new items</li>
-                      <li>All other fields of columns must not be empty</li>
-                    </ul>
-                  </div>
-
-                  <div className="flex flex-col space-y-2">
-                    <label
-                      htmlFor="csv-upload"
-                      className="text-[#8B6E4F] font-medium"
-                    >
-                      Select CSV File
-                    </label>
-                    <div className="flex items-center">
-                      <input
-                        type="file"
-                        id="csv-upload"
-                        accept=".csv"
-                        ref={fileInputRef}
-                        onChange={handleFileChange}
-                        className="hidden"
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="border-[#D6C8B8] text-[#8B6E4F] hover:bg-[#F9F5F0] hover:text-[#5D4B35]"
-                        onClick={() => fileInputRef.current?.click()}
-                      >
-                        <Upload className="h-4 w-4 mr-2" />
-                        Browse...
-                      </Button>
-                      <span className="ml-3 text-sm text-[#8B6E4F]">
-                        {uploadFile ? uploadFile.name : "No file selected"}
-                      </span>
+                      <div className="flex flex-col space-y-2">
+                        <label
+                          htmlFor="csv-upload"
+                          className="text-[#8B6E4F] font-medium"
+                        >
+                          Select CSV File
+                        </label>
+                        <div className="flex items-center">
+                          <input
+                            type="file"
+                            id="csv-upload"
+                            accept=".csv"
+                            ref={fileInputRef}
+                            onChange={handleFileChange}
+                            className="hidden"
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className="border-[#D6C8B8] text-[#8B6E4F] hover:bg-[#F9F5F0] hover:text-[#5D4B35]"
+                            onClick={() => fileInputRef.current?.click()}
+                          >
+                            <Upload className="h-4 w-4 mr-2" />
+                            Browse...
+                          </Button>
+                          <span className="ml-3 text-sm text-[#8B6E4F]">
+                            {uploadFile ? uploadFile.name : "No file selected"}
+                          </span>
+                        </div>
+                        {uploadError && (
+                          <p className="text-red-500 text-sm">{uploadError}</p>
+                        )}
+                      </div>
                     </div>
-                    {uploadError && (
-                      <p className="text-red-500 text-sm">{uploadError}</p>
-                    )}
-                  </div>
-                </div>
+                  </>
+                )}
 
                 <DialogFooter>
                   <Button
@@ -668,7 +677,7 @@ export default function Ingredients() {
                       <AlertDialogAction
                         className="bg-red-500 text-white hover:bg-red-600"
                         onClick={() =>
-                          handleDeleteIngredient(selectedIngredient.id)
+                          handleDeleteIngredient(selectedIngredient)
                         }
                       >
                         Delete

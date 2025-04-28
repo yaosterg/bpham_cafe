@@ -33,12 +33,40 @@ export const batchCreateIngredients = createAsyncThunk(
   }
 );
 
+export const updateIngredient = createAsyncThunk(
+  "ingredient/updateIngredient",
+  async (ingredient) => {
+    const { data } = await axios.put(
+      `api/ingredients/updateingredients/${ingredient.id}`,
+      ingredient
+    );
+    return data;
+  }
+);
+
+export const deleteIngredient = createAsyncThunk(
+  "ingredient/deleteIngredient",
+  async (ingredient) => {
+    const { data } = await axios.post(
+      "api/ingredients/deleteingredient",
+      ingredient
+    );
+    return data;
+  }
+);
+
 export const ingredientSlice = createSlice({
   name: "ingredients",
   initialState: {
     allIngredients: [],
+    editedIngredient: {},
   },
-  reducers: {},
+  reducers: {
+    setEditedIngredient: (state, action) => {
+      console.log("setEditedIngredient", action.payload);
+      state.editedIngredient = action.payload;
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(findAllIngredients.fulfilled, (state, action) => {
@@ -49,9 +77,36 @@ export const ingredientSlice = createSlice({
         state.allIngredients = state.allIngredients.sort((a, b) =>
           a.name.localeCompare(b.name)
         );
+      })
+      .addCase(batchCreateIngredients.fulfilled, (state, action) => {
+        console.log("Batch create ingredients:", action.payload);
+        state.allIngredients = action.payload.ingredients;
+      })
+      .addCase(deleteIngredient.fulfilled, (state, action) => {
+        let deletedIngredient = action.payload.ingredient;
+        state.allIngredients = state.allIngredients.filter(
+          (ingredient) => ingredient.id !== deletedIngredient.id
+        );
+      })
+      .addCase(updateIngredient.fulfilled, (state, action) => {
+        const updatedIngredient = action.payload.updatedIngredient;
+
+        // Properly replace in array
+        state.allIngredients = state.allIngredients.map((ingredient) =>
+          ingredient.id === updatedIngredient.id
+            ? updatedIngredient
+            : ingredient
+        );
+        state.editedIngredient = updatedIngredient;
+        state.allIngredients = state.allIngredients.sort((a, b) =>
+          a.name.localeCompare(b.name)
+        );
       });
   },
 });
 
 export const selectAllIngredients = (state) => state.ingredients.allIngredients;
+export const selectEditedIngredient = (state) =>
+  state.ingredients.editedIngredient;
 export default ingredientSlice.reducer;
+export const { setEditedIngredient } = ingredientSlice.actions;

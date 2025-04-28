@@ -60,12 +60,16 @@ export const categorySlice = createSlice({
         state.allCategories = action.payload.categories;
       })
       .addCase(updateCategory.fulfilled, (state, action) => {
-        let updatedCategory = action.payload;
-        state.allCategories.map((category) => {
-          if (category.id === updatedCategory.id) {
-            category.category = updatedCategory.category;
-          }
-        });
+        const updatedCategory = action.payload;
+
+        // Correctly update the category
+        state.allCategories = state.allCategories.map((category) =>
+          category.id === updatedCategory.id
+            ? { ...category, category: updatedCategory.category }
+            : category
+        );
+
+        // Sort after updating
         state.allCategories = state.allCategories.sort((a, b) =>
           a.category.localeCompare(b.category)
         );
