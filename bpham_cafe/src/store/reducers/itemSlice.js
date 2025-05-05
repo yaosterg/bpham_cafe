@@ -22,6 +22,14 @@ export const createMenuItem = createAsyncThunk(
   }
 );
 
+export const deleteMenuItem = createAsyncThunk(
+  "menu/deleteMenuItem",
+  async (item) => {
+    const { data } = await axios.post("api/menu/deleteitem", item);
+    return data;
+  }
+);
+
 export const itemSlice = createSlice({
   name: "items",
   initialState: {
@@ -39,6 +47,12 @@ export const itemSlice = createSlice({
       })
       .addCase(findItemById.fulfilled, (state, action) => {
         state.menuItemsById = action.payload.items;
+      })
+      .addCase(deleteMenuItem.fulfilled, (state, action) => {
+        let deletedItem = action.payload.item;
+        state.menuItemsById = state.menuItemsById.filter(
+          (item) => item.id !== deletedItem.id
+        );
       });
   },
 });

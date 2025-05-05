@@ -39,8 +39,8 @@ model Item{
 model ItemIngredient {
   itemId        Int
   ingredientId  Int
-  item          Item        @relation(fields: [itemId], references: [id])
-  ingredient    Ingredient  @relation(fields: [ingredientId], references: [id])
+ item       Item       @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  ingredient Ingredient @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
 
   @@id([itemId, ingredientId]) // Composite primary key
 }

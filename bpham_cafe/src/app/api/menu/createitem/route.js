@@ -11,7 +11,7 @@ export async function POST(req) {
         name: formData.name,
         description: formData.description,
         price: new Prisma.Decimal(formData.price),
-        imageURL: formData.imageUrl,
+        imageURL: formData.imageURL,
         menuStatus: formData.status,
         categoryId: formData.categoryId,
         ingredients: {

@@ -5,11 +5,11 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   createMenuItem,
   selectMenuItemsById,
-  findItemById,
+  deleteMenuItem,
 } from "@/store/reducers/itemSlice";
+import axios from "axios";
 
 // Mock data for menu items with image URLs
-const MOCK_MENU_ITEMS = [];
 
 export default function CategoryItems({
   categoryName = "Coffee Menu",
@@ -17,8 +17,6 @@ export default function CategoryItems({
   ingredients,
   selectedCategory,
 }) {
-  // State
-  // const [menuItems, setMenuItems] = useState(MOCK_MENU_ITEMS);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [currentItem, setCurrentItem] = useState(null);
   const [formData, setFormData] = useState({
@@ -27,9 +25,10 @@ export default function CategoryItems({
     cost: 0,
     ingredients: [],
     status: true,
-    imageUrl: "",
+    imageURL: "",
   });
   const dispatch = useDispatch();
+  const [menuIngredients, setMenuIngredients] = useState([]);
   const menuItems = useSelector(selectMenuItemsById);
 
   // Calculate ingredient cost
@@ -51,15 +50,17 @@ export default function CategoryItems({
   };
 
   // Handle edit button click
-  const handleEdit = (item) => {
+  const handleEdit = async (item) => {
     setCurrentItem(item);
+    const { data } = await axios.get(`/api/menu/getmenuingredients/${item.id}`);
+
     setFormData({
       name: item.name,
       description: item.description,
       cost: item.price,
-      ingredients: [...item.ingredients],
+      ingredients: [...data.ingredients],
       status: item.status,
-      imageUrl: item.imageUrl || "",
+      imageURL: item.imageURL || "",
     });
     setIsEditDialogOpen(true);
   };
@@ -116,6 +117,10 @@ export default function CategoryItems({
   };
 
   // Add new ingredient to form
+
+  const handleDelete = async (item) => {
+    await dispatch(deleteMenuItem(item));
+  };
 
   const addIngredient = () => {
     const availableIngredients = getAvailableIngredients();
@@ -203,7 +208,7 @@ export default function CategoryItems({
                 cost: 0,
                 ingredients: [],
                 status: true,
-                imageUrl: "",
+                imageURL: "",
               });
               setIsEditDialogOpen(true);
             }}
@@ -230,7 +235,7 @@ export default function CategoryItems({
                     <div className="mr-4 flex-shrink-0">
                       <div className="w-16 h-16 rounded-lg overflow-hidden border border-[#e6ddd0] shadow-sm flex items-center justify-center bg-white">
                         <img
-                          src={item.imageUrl || "/placeholder.svg"}
+                          src={item.imageURL || "/placeholder.svg"}
                           alt={item.name}
                           className="max-w-full max-h-full object-contain"
                           onError={(e) => {
@@ -279,7 +284,7 @@ export default function CategoryItems({
                         </button>
                         <button
                           className="w-8 h-8 flex items-center justify-center border border-red-400 text-red-400 hover:bg-red-50 rounded-full shadow-sm hover:shadow transition-all duration-200"
-                          onClick={() => handleDelete(item.id)}
+                          onClick={() => handleDelete(item)}
                         >
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -342,7 +347,7 @@ export default function CategoryItems({
                   {/* Image URL Field with Preview */}
                   <div className="space-y-2">
                     <label
-                      htmlFor="imageUrl"
+                      htmlFor="imageURL"
                       className="block text-[#5c3d2e] font-medium"
                     >
                       Image URL
@@ -350,10 +355,10 @@ export default function CategoryItems({
                     <div className="flex gap-4">
                       <div className="flex-1">
                         <input
-                          id="imageUrl"
-                          name="imageUrl"
+                          id="imageURL"
+                          name="imageURL"
                           type="text"
-                          value={formData.imageUrl}
+                          value={formData.imageURL}
                           onChange={handleInputChange}
                           className="w-full p-3 border border-[#d1c5b5] rounded-lg focus:ring-2 focus:ring-[#b85c38] focus:border-[#b85c38] outline-none"
                           placeholder="Enter image URL"
@@ -361,7 +366,7 @@ export default function CategoryItems({
                       </div>
                       <div className="w-16 h-16 rounded-lg overflow-hidden border border-[#d1c5b5] shadow-sm flex-shrink-0 flex items-center justify-center bg-white">
                         <img
-                          src={formData.imageUrl || "/placeholder.svg"}
+                          src={formData.imageURL || "/placeholder.svg"}
                           alt="Preview"
                           className="max-w-full max-h-full object-contain"
                           onError={(e) => {
