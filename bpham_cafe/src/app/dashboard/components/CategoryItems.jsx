@@ -1,121 +1,24 @@
 "use client";
 
-import { useState } from "react";
-
-// Mock data for ingredients with source and units
-const MOCK_INGREDIENTS = [
-  {
-    id: "1",
-    name: "Coffee Beans (Premium)",
-    source: "Colombia",
-    cost: 0.75,
-    units: "oz",
-  },
-  { id: "2", name: "Milk", source: "Local Dairy", cost: 0.5, units: "oz" },
-  {
-    id: "3",
-    name: "Sugar",
-    source: "Organic Supply Co.",
-    cost: 0.1,
-    units: "oz",
-  },
-  {
-    id: "4",
-    name: "Chocolate Syrup",
-    source: "Sweet Treats Inc.",
-    cost: 0.35,
-    units: "oz",
-  },
-  {
-    id: "5",
-    name: "Caramel Syrup",
-    source: "Sweet Treats Inc.",
-    cost: 0.4,
-    units: "oz",
-  },
-  {
-    id: "6",
-    name: "Whipped Cream",
-    source: "Local Dairy",
-    cost: 0.3,
-    units: "oz",
-  },
-  {
-    id: "7",
-    name: "Vanilla Extract",
-    source: "Flavor Essentials",
-    cost: 0.25,
-    units: "tsp",
-  },
-  {
-    id: "8",
-    name: "Cinnamon",
-    source: "Spice Traders",
-    cost: 0.15,
-    units: "tsp",
-  },
-];
+import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  createMenuItem,
+  selectMenuItemsById,
+  findItemById,
+} from "@/store/reducers/itemSlice";
 
 // Mock data for menu items with image URLs
-const MOCK_MENU_ITEMS = [
-  {
-    id: "1",
-    name: "Classic Espresso",
-    description: "Rich and intense coffee experience with a perfect crema",
-    ingredients: [{ ingredientId: "1", quantity: 2 }],
-    cost: 3.5,
-    status: true,
-    imageUrl:
-      "https://images.unsplash.com/photo-1610889556528-9a770e32642f?w=200&h=200&fit=crop&q=80",
-  },
-  {
-    id: "2",
-    name: "Cappuccino",
-    description: "Equal parts espresso, steamed milk, and milk foam",
-    ingredients: [
-      { ingredientId: "1", quantity: 1 },
-      { ingredientId: "2", quantity: 2 },
-    ],
-    cost: 4.25,
-    status: true,
-    imageUrl:
-      "https://images.unsplash.com/photo-1534778101976-62847782c213?w=200&h=200&fit=crop&q=80",
-  },
-  {
-    id: "3",
-    name: "Caramel Macchiato",
-    description: "Espresso with steamed milk, vanilla, and caramel drizzle",
-    ingredients: [
-      { ingredientId: "1", quantity: 1 },
-      { ingredientId: "2", quantity: 2 },
-      { ingredientId: "5", quantity: 1 },
-      { ingredientId: "7", quantity: 1 },
-    ],
-    cost: 4.75,
-    status: false,
-    imageUrl:
-      "https://images.unsplash.com/photo-1587080413959-06b859fb107d?w=200&h=200&fit=crop&q=80",
-  },
-  {
-    id: "4",
-    name: "Mocha",
-    description: "Espresso with steamed milk and chocolate syrup",
-    ingredients: [
-      { ingredientId: "1", quantity: 1 },
-      { ingredientId: "2", quantity: 2 },
-      { ingredientId: "4", quantity: 2 },
-    ],
-    cost: 4.5,
-    status: true,
-    imageUrl:
-      "https://images.unsplash.com/photo-1579888944880-d98341245702?w=200&h=200&fit=crop&q=80",
-  },
-];
+const MOCK_MENU_ITEMS = [];
 
-export default function CategoryItems({ categoryName = "Coffee Menu" }) {
+export default function CategoryItems({
+  categoryName = "Coffee Menu",
+  id,
+  ingredients,
+  selectedCategory,
+}) {
   // State
-  const [menuItems, setMenuItems] = useState(MOCK_MENU_ITEMS);
-  const [ingredients] = useState(MOCK_INGREDIENTS);
+  // const [menuItems, setMenuItems] = useState(MOCK_MENU_ITEMS);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [currentItem, setCurrentItem] = useState(null);
   const [formData, setFormData] = useState({
@@ -126,12 +29,14 @@ export default function CategoryItems({ categoryName = "Coffee Menu" }) {
     status: true,
     imageUrl: "",
   });
+  const dispatch = useDispatch();
+  const menuItems = useSelector(selectMenuItemsById);
 
   // Calculate ingredient cost
   const calculateIngredientCost = (ingredients) => {
     return ingredients.reduce((total, item) => {
       const ingredient = getIngredientById(item.ingredientId);
-      return total + (ingredient?.cost || 0) * item.quantity;
+      return total + (ingredient?.price || 0) * item.quantity;
     }, 0);
   };
 
@@ -151,7 +56,7 @@ export default function CategoryItems({ categoryName = "Coffee Menu" }) {
     setFormData({
       name: item.name,
       description: item.description,
-      cost: item.cost,
+      cost: item.price,
       ingredients: [...item.ingredients],
       status: item.status,
       imageUrl: item.imageUrl || "",
@@ -159,9 +64,13 @@ export default function CategoryItems({ categoryName = "Coffee Menu" }) {
     setIsEditDialogOpen(true);
   };
 
-  // Handle delete button click
-  const handleDelete = (id) => {
-    setMenuItems(menuItems.filter((item) => item.id !== id));
+  const getAvailableIngredients = (currentIngredientId) => {
+    // Get IDs of all selected ingredients EXCEPT the current one we're editing
+    const selectedIds = formData.ingredients
+      .filter((ing) => Number(ing.ingredientId) !== Number(currentIngredientId))
+      .map((ing) => Number(ing.ingredientId));
+
+    return ingredients.filter((ing) => !selectedIds.includes(Number(ing.id)));
   };
 
   // Handle form input changes
@@ -169,7 +78,6 @@ export default function CategoryItems({ categoryName = "Coffee Menu" }) {
     const { name, value, type, checked } = e.target;
 
     if (name === "cost") {
-      // Only restrict to 2 decimal places, don't format while typing
       const regex = /^\d*\.?\d{0,2}$/;
       if (value === "" || regex.test(value)) {
         setFormData({
@@ -192,7 +100,7 @@ export default function CategoryItems({ categoryName = "Coffee Menu" }) {
     if (field === "ingredientId") {
       updatedIngredients[index] = {
         ...updatedIngredients[index],
-        ingredientId: value,
+        ingredientId: Number(value),
       };
     } else {
       updatedIngredients[index] = {
@@ -208,12 +116,16 @@ export default function CategoryItems({ categoryName = "Coffee Menu" }) {
   };
 
   // Add new ingredient to form
+
   const addIngredient = () => {
+    const availableIngredients = getAvailableIngredients();
+    if (availableIngredients.length === 0) return;
+
     setFormData({
       ...formData,
       ingredients: [
         ...formData.ingredients,
-        { ingredientId: ingredients[0]?.id || "", quantity: 1 },
+        { ingredientId: availableIngredients[0].id, quantity: 1 },
       ],
     });
   };
@@ -229,26 +141,22 @@ export default function CategoryItems({ categoryName = "Coffee Menu" }) {
   };
 
   // Save menu item
-  const saveMenuItem = () => {
-    // Format cost to 2 decimal places before saving
+  const saveMenuItem = async () => {
     const formattedData = {
       ...formData,
-      cost: formData.cost === "" ? 0 : Number(formData.cost),
+      price: formData.cost === "" ? 0 : Number(formData.cost),
+      categoryId: selectedCategory,
     };
 
     if (!currentItem) {
       // Add new item
-      const newItem = {
-        id: Date.now().toString(),
-        ...formattedData,
-      };
-      setMenuItems([...menuItems, newItem]);
+      await dispatch(createMenuItem(formattedData));
     } else {
-      // Update existing item
-      const updatedItems = menuItems.map((item) =>
-        item.id === currentItem.id ? { ...item, ...formattedData } : item
-      );
-      setMenuItems(updatedItems);
+      // // Update existing item
+      // const updatedItems = menuItems.map((item) =>
+      //   item.id === currentItem.id ? { ...item, ...formattedData } : item
+      // );
+      // setMenuItems(updatedItems);
     }
     setIsEditDialogOpen(false);
   };
@@ -284,114 +192,117 @@ export default function CategoryItems({ categoryName = "Coffee Menu" }) {
       {/* Header - Fixed */}
       <div className="flex justify-between items-center border-b border-[#e6ddd0] p-6 bg-gradient-to-r from-[#5c3d2e] to-[#b85c38]">
         <h2 className="text-2xl font-bold text-white">{categoryName}</h2>
-        <button
-          className="px-5 py-2.5 bg-white text-[#b85c38] hover:bg-[#f8f3e9] rounded-full flex items-center shadow-md transition-all duration-200"
-          onClick={() => {
-            setCurrentItem(null);
-            setFormData({
-              name: "",
-              description: "",
-              cost: 0,
-              ingredients: [],
-              status: true,
-              imageUrl: "",
-            });
-            setIsEditDialogOpen(true);
-          }}
-        >
-          <span className="mr-2 font-bold">+</span> Add Item
-        </button>
+        {selectedCategory ? (
+          <button
+            className="px-5 py-2.5 bg-white text-[#b85c38] hover:bg-[#f8f3e9] rounded-full flex items-center shadow-md transition-all duration-200"
+            onClick={() => {
+              setCurrentItem(null);
+              setFormData({
+                name: "",
+                description: "",
+                cost: 0,
+                ingredients: [],
+                status: true,
+                imageUrl: "",
+              });
+              setIsEditDialogOpen(true);
+            }}
+          >
+            <span className="mr-2 font-bold">+</span> Add Item
+          </button>
+        ) : null}
       </div>
 
       {/* Menu Items List - Scrollable */}
       <div className="flex-1 overflow-y-auto scrollbar-hide">
         <div className="p-6 space-y-5">
-          {menuItems.map((item) => (
-            <div
-              key={item.id}
-              className={`bg-white border border-[#e6ddd0] rounded-xl shadow-md hover:shadow-lg transition-shadow duration-200 w-full overflow-hidden ${
-                !item.status ? "opacity-70" : ""
-              }`}
-            >
-              <div className="p-5">
-                <div className="flex items-start">
-                  {/* Image Preview */}
-                  <div className="mr-4 flex-shrink-0">
-                    <div className="w-16 h-16 rounded-lg overflow-hidden border border-[#e6ddd0] shadow-sm flex items-center justify-center bg-white">
-                      <img
-                        src={item.imageUrl || "/placeholder.svg"}
-                        alt={item.name}
-                        className="max-w-full max-h-full object-contain"
-                        onError={(e) => {
-                          e.currentTarget.src =
-                            "https://via.placeholder.com/80?text=No+Image";
-                        }}
-                      />
+          {menuItems.length > 0 &&
+            menuItems.map((item) => (
+              <div
+                key={item.id}
+                className={`bg-white border border-[#e6ddd0] rounded-xl shadow-md hover:shadow-lg transition-shadow duration-200 w-full overflow-hidden ${
+                  !item.status ? "opacity-70" : ""
+                }`}
+              >
+                <div className="p-5">
+                  <div className="flex items-start">
+                    {/* Image Preview */}
+                    <div className="mr-4 flex-shrink-0">
+                      <div className="w-16 h-16 rounded-lg overflow-hidden border border-[#e6ddd0] shadow-sm flex items-center justify-center bg-white">
+                        <img
+                          src={item.imageUrl || "/placeholder.svg"}
+                          alt={item.name}
+                          className="max-w-full max-h-full object-contain"
+                          onError={(e) => {
+                            e.currentTarget.src =
+                              "https://static.wikia.nocookie.net/naruto/images/d/d6/Naruto_Part_I.png/revision/latest/scale-to-width-down/1000?cb=20210223094656";
+                          }}
+                        />
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="flex justify-between flex-1">
-                    <div className="flex-1">
-                      <h3
-                        className={`text-xl font-semibold ${
-                          item.status ? "text-[#5c3d2e]" : "text-gray-400"
-                        }`}
-                      >
-                        {item.name}
-                      </h3>
-                      <p className="text-sm italic text-[#8c7b6b] mt-2">
-                        {item.description}
-                      </p>
-                      <p className="text-[#b85c38] font-medium mt-3">
-                        ${item.cost.toFixed(2)}
-                      </p>
-                    </div>
-                    <div className="flex space-x-2">
-                      <button
-                        className="w-8 h-8 flex items-center justify-center border border-[#b85c38] text-[#b85c38] hover:bg-[#f8f3e9] rounded-full shadow-sm hover:shadow transition-all duration-200"
-                        onClick={() => handleEdit(item)}
-                      >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="14"
-                          height="14"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
+                    <div className="flex justify-between flex-1">
+                      <div className="flex-1">
+                        <h3
+                          className={`text-xl font-semibold ${
+                            item.status ? "text-[#5c3d2e]" : "text-gray-400"
+                          }`}
                         >
-                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                        </svg>
-                      </button>
-                      <button
-                        className="w-8 h-8 flex items-center justify-center border border-red-400 text-red-400 hover:bg-red-50 rounded-full shadow-sm hover:shadow transition-all duration-200"
-                        onClick={() => handleDelete(item.id)}
-                      >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="14"
-                          height="14"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
+                          {item.name}
+                        </h3>
+                        <p className="text-sm italic text-[#8c7b6b] mt-2">
+                          {item.description}
+                        </p>
+                        <p className="text-[#b85c38] font-medium mt-3">
+                          ${item.price}
+                        </p>
+                      </div>
+                      <div className="flex space-x-2">
+                        <button
+                          className="w-8 h-8 flex items-center justify-center border border-[#b85c38] text-[#b85c38] hover:bg-[#f8f3e9] rounded-full shadow-sm hover:shadow transition-all duration-200"
+                          onClick={() => handleEdit(item)}
                         >
-                          <path d="M3 6h18"></path>
-                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path>
-                          <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                        </svg>
-                      </button>
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="14"
+                            height="14"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                          </svg>
+                        </button>
+                        <button
+                          className="w-8 h-8 flex items-center justify-center border border-red-400 text-red-400 hover:bg-red-50 rounded-full shadow-sm hover:shadow transition-all duration-200"
+                          onClick={() => handleDelete(item.id)}
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="14"
+                            height="14"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M3 6h18"></path>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path>
+                            <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                          </svg>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
         </div>
       </div>
 
@@ -455,7 +366,7 @@ export default function CategoryItems({ categoryName = "Coffee Menu" }) {
                           className="max-w-full max-h-full object-contain"
                           onError={(e) => {
                             e.currentTarget.src =
-                              "https://via.placeholder.com/80?text=Invalid+URL";
+                              "https://static.wikia.nocookie.net/naruto/images/d/d6/Naruto_Part_I.png/revision/latest/scale-to-width-down/1000?cb=20210223094656";
                           }}
                         />
                       </div>
@@ -526,8 +437,13 @@ export default function CategoryItems({ categoryName = "Coffee Menu" }) {
                         Ingredients
                       </label>
                       <button
-                        className="px-3 py-1.5 border border-[#b85c38] text-[#b85c38] hover:bg-[#f0e9df] rounded-full shadow-sm hover:shadow transition-all duration-200 flex items-center text-sm"
+                        className={`px-3 py-1.5 border rounded-full shadow-sm transition-all duration-200 flex items-center text-sm ${
+                          getAvailableIngredients().length === 0
+                            ? "border-gray-300 text-gray-400 cursor-not-allowed"
+                            : "border-[#b85c38] text-[#b85c38] hover:bg-[#f0e9df] hover:shadow"
+                        }`}
                         onClick={addIngredient}
+                        disabled={getAvailableIngredients().length === 0}
                       >
                         <span className="mr-1 font-bold">+</span> Add Ingredient
                       </button>
@@ -542,7 +458,7 @@ export default function CategoryItems({ categoryName = "Coffee Menu" }) {
                         <div className="space-y-4">
                           {formData.ingredients.map((ingredient, index) => {
                             const ingredientDetails = getIngredientById(
-                              ingredient.ingredientId
+                              Number(ingredient.ingredientId)
                             );
                             return (
                               <div
@@ -562,7 +478,19 @@ export default function CategoryItems({ categoryName = "Coffee Menu" }) {
                                       }
                                       className="w-full p-2 border border-[#d1c5b5] rounded-lg focus:ring-2 focus:ring-[#b85c38] focus:border-[#b85c38] outline-none bg-white"
                                     >
-                                      {ingredients.map((ing) => (
+                                      {/* Show currently selected ingredient first */}
+                                      {ingredientDetails && (
+                                        <option value={ingredient.ingredientId}>
+                                          {ingredientDetails.name} ($
+                                          {ingredientDetails.price.toFixed(2)}/
+                                          {ingredientDetails.unit})
+                                        </option>
+                                      )}
+
+                                      {/* Show remaining available ingredients */}
+                                      {getAvailableIngredients(
+                                        ingredient.ingredientId
+                                      ).map((ing) => (
                                         <option key={ing.id} value={ing.id}>
                                           {ing.name}
                                         </option>
@@ -571,8 +499,8 @@ export default function CategoryItems({ categoryName = "Coffee Menu" }) {
                                     {ingredientDetails && (
                                       <p className="text-sm italic text-[#8c7b6b] mt-1">
                                         {ingredientDetails.source} ($
-                                        {ingredientDetails.cost.toFixed(2)}/
-                                        {ingredientDetails.units})
+                                        {ingredientDetails.price.toFixed(2)}/
+                                        {ingredientDetails.unit})
                                       </p>
                                     )}
                                   </div>
@@ -628,7 +556,7 @@ export default function CategoryItems({ categoryName = "Coffee Menu" }) {
                                     />
                                     {ingredientDetails && (
                                       <span className="px-2 py-2 bg-[#f0e9df] text-[#8c7b6b] border-l border-[#d1c5b5]">
-                                        {ingredientDetails.units}
+                                        {ingredientDetails.unit}
                                       </span>
                                     )}
                                   </div>

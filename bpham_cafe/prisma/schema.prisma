@@ -12,6 +12,7 @@ generator client {
 model Category {
   id        Int      @id @default(autoincrement())
   category String
+   items    Item[]
 }
 
 model Ingredient {
@@ -20,8 +21,29 @@ model Ingredient {
   source String
   price Float
   unit  String
+  items        ItemIngredient[]
 }
 
+model Item{
+  id        Int      @id @default(autoincrement())
+  name String
+  description String
+  imageURL String
+  price Decimal
+  ingredients  ItemIngredient[]
+  menuStatus Boolean
+  categoryId   Int              // Foreign key
+  category     Category         @relation(fields: [categoryId], references: [id])
+}
+
+model ItemIngredient {
+  itemId        Int
+  ingredientId  Int
+  item          Item        @relation(fields: [itemId], references: [id])
+  ingredient    Ingredient  @relation(fields: [ingredientId], references: [id])
+
+  @@id([itemId, ingredientId]) // Composite primary key
+}
 
 model Orders{
   id Int @id @default(autoincrement())

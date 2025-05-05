@@ -595,7 +595,7 @@ export default function Ingredients() {
                 ))
               ) : (
                 <div className="py-8 text-center text-[#8B6E4F]">
-                  No ingredients found matching "{searchQuery}"
+                  <CoffeeAnimation />
                 </div>
               )}
             </div>

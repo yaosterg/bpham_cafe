@@ -1,9 +1,20 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, Edit, Trash2, ChevronRight, Coffee } from "lucide-react";
+import { Plus, Edit, Trash2, ChevronRight, Coffee, Trash } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import {
   Card,
   CardContent,
@@ -37,185 +48,28 @@ import {
   updateCategory,
   deleteCategory,
 } from "@/store/reducers/categorySlice";
+import {
+  findAllIngredients,
+  selectAllIngredients,
+} from "@/store/reducers/ingredientSlice";
+import { selectMenuItemsById, findItemById } from "@/store/reducers/itemSlice";
 import CategoryItems from "./CategoryItems";
-
-// Sample data - replace with your actual data
-const initialCategories = [
-  { id: 1, name: "Hot Coffee", itemCount: 8 },
-  { id: 2, name: "Cold Coffee", itemCount: 6 },
-  { id: 3, name: "Espresso", itemCount: 5 },
-  { id: 4, name: "Tea", itemCount: 7 },
-  { id: 5, name: "Pastries", itemCount: 12 },
-  { id: 6, name: "Sandwiches", itemCount: 4 },
-];
-
-const menuItemsByCategory = {
-  1: [
-    {
-      id: 101,
-      name: "Americano",
-      price: "$3.50",
-      description: "Espresso with hot water",
-    },
-    {
-      id: 102,
-      name: "Cappuccino",
-      price: "$4.25",
-      description: "Espresso with steamed milk and foam",
-    },
-    {
-      id: 103,
-      name: "Latte",
-      price: "$4.50",
-      description: "Espresso with steamed milk",
-    },
-    {
-      id: 104,
-      name: "Mocha",
-      price: "$4.75",
-      description: "Espresso with chocolate and steamed milk",
-    },
-    {
-      id: 105,
-      name: "Drip Coffee",
-      price: "$2.75",
-      description: "House blend coffee",
-    },
-  ],
-  2: [
-    {
-      id: 201,
-      name: "Iced Americano",
-      price: "$3.75",
-      description: "Espresso with cold water and ice",
-    },
-    {
-      id: 202,
-      name: "Iced Latte",
-      price: "$4.75",
-      description: "Espresso with cold milk and ice",
-    },
-    {
-      id: 203,
-      name: "Cold Brew",
-      price: "$4.50",
-      description: "Slow-steeped cold coffee",
-    },
-    {
-      id: 204,
-      name: "Frappuccino",
-      price: "$5.25",
-      description: "Blended coffee with ice and milk",
-    },
-  ],
-  3: [
-    {
-      id: 301,
-      name: "Espresso Shot",
-      price: "$2.50",
-      description: "Single shot of espresso",
-    },
-    {
-      id: 302,
-      name: "Double Shot",
-      price: "$3.25",
-      description: "Double shot of espresso",
-    },
-    {
-      id: 303,
-      name: "Macchiato",
-      price: "$3.75",
-      description: "Espresso with a dash of foam",
-    },
-  ],
-  4: [
-    {
-      id: 401,
-      name: "Green Tea",
-      price: "$3.25",
-      description: "Traditional green tea",
-    },
-    {
-      id: 402,
-      name: "Earl Grey",
-      price: "$3.25",
-      description: "Black tea with bergamot",
-    },
-    {
-      id: 403,
-      name: "Chai Latte",
-      price: "$4.50",
-      description: "Spiced tea with steamed milk",
-    },
-    {
-      id: 404,
-      name: "Herbal Tea",
-      price: "$3.25",
-      description: "Caffeine-free herbal infusion",
-    },
-  ],
-  5: [
-    {
-      id: 501,
-      name: "Croissant",
-      price: "$3.50",
-      description: "Buttery, flaky pastry",
-    },
-    {
-      id: 502,
-      name: "Blueberry Muffin",
-      price: "$3.75",
-      description: "Muffin with fresh blueberries",
-    },
-    {
-      id: 503,
-      name: "Chocolate Chip Cookie",
-      price: "$2.50",
-      description: "Freshly baked chocolate chip cookie",
-    },
-    {
-      id: 504,
-      name: "Cinnamon Roll",
-      price: "$4.25",
-      description: "Sweet roll with cinnamon and icing",
-    },
-  ],
-  6: [
-    {
-      id: 601,
-      name: "Turkey & Cheese",
-      price: "$6.75",
-      description: "Turkey with cheddar on sourdough",
-    },
-    {
-      id: 602,
-      name: "Veggie Wrap",
-      price: "$6.50",
-      description: "Seasonal vegetables in a wrap",
-    },
-    {
-      id: 603,
-      name: "BLT",
-      price: "$6.95",
-      description: "Bacon, lettuce, and tomato on toast",
-    },
-  ],
-};
 
 export default function CategoriesManager() {
   const dispatch = useDispatch();
-  const [categories, setCategories] = useState(initialCategories);
   const [newCategoryName, setNewCategoryName] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditCategoryOpen, setIsEditCategoryOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState({});
   const [selectedCategory, setSelectedCategory] = useState(null);
-  const [menuItems, setMenuItems] = useState([]);
   const allCategories = useSelector(selectAllCategories);
+  const allIngredients = useSelector(selectAllIngredients);
+  const menuItemsById = useSelector(selectMenuItemsById);
 
   useEffect(() => {
     const fetchCategories = async () => {
       await dispatch(findAllCategories());
+      await dispatch(findAllIngredients());
     };
     fetchCategories();
   }, []);
@@ -240,12 +94,13 @@ export default function CategoriesManager() {
 
   const handleDeleteCategory = async (categoryId) => {
     await dispatch(deleteCategory({ id: categoryId }));
-    setIsDeleteCategoryOpen(false);
+    setSelectedCategory(null);
   };
 
-  const handleCategoryClick = (categoryId) => {
+  const handleCategoryClick = async (categoryId) => {
     setSelectedCategory(categoryId);
-    setMenuItems(menuItemsByCategory[categoryId] || []);
+    await dispatch(findItemById(categoryId));
+    console.log("Menu Items by ID:", menuItemsById);
   };
 
   return (
@@ -425,7 +280,7 @@ export default function CategoriesManager() {
                                     setNewCategoryName(e.target.value)
                                   }
                                   className="col-span-3 border-[#E6DDD1]"
-                                  placeholder={category.category}
+                                  placeholder="New category name"
                                 />
                               </div>
                             </div>
@@ -439,19 +294,44 @@ export default function CategoriesManager() {
                             </DialogFooter>
                           </DialogContent>
                         </Dialog>
-
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-red-500"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteCategory(category.id);
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                          <span className="sr-only">Delete</span>
-                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-red-500"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                              <span className="sr-only">Delete</span>
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent className="bg-[#F9F5F0] border-[#D6C8B8]">
+                            <AlertDialogHeader>
+                              <AlertDialogTitle className="text-[#8B6E4F]">
+                                Delete Category
+                              </AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Are you sure you want to delete this category?
+                                This action cannot be undone. You cannot delete
+                                categories with menu items.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel className="bg-[#F9F5F0] text-[#8B6E4F] hover:bg-[#EFE9E0] border-[#D6C8B8]">
+                                Cancel
+                              </AlertDialogCancel>
+                              <AlertDialogAction
+                                className="bg-red-500 text-white hover:bg-red-600"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteCategory(category.id);
+                                }}
+                              >
+                                Delete
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -462,115 +342,12 @@ export default function CategoriesManager() {
         </Card>
 
         <Card className="md:col-span-8 border-[#E6DDD1] bg-white">
-          <CategoryItems />
-          {/* <CardHeader>
-            <CategoryItems />
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-[#5F4B32]">
-                  {selectedCategory
-                    ? `${
-                        categories.find((c) => c.id === selectedCategory)?.name
-                      } Items`
-                    : "Menu Items"}
-                </CardTitle>
-                <CardDescription className="text-[#8C7851]">
-                  {selectedCategory
-                    ? `All items in the ${
-                        categories.find((c) => c.id === selectedCategory)?.name
-                      } category`
-                    : "Select a category to view items"}
-                </CardDescription>
-              </div>
-              {selectedCategory && (
-                <Button className="bg-[#8C7851] hover:bg-[#6F5B3E] text-white">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Item
-                </Button>
-              )}
-            </div>
-          </CardHeader>
-          <CardContent>
-            {selectedCategory ? (
-              menuItems.length > 0 ? (
-                <Table>
-                  <TableHeader>
-                    <TableRow className="hover:bg-[#F9F5F1]">
-                      <TableHead className="text-[#5F4B32]">Name</TableHead>
-                      <TableHead className="text-[#5F4B32]">
-                        Description
-                      </TableHead>
-                      <TableHead className="text-right text-[#5F4B32]">
-                        Price
-                      </TableHead>
-                      <TableHead className="w-[100px] text-[#5F4B32]">
-                        Actions
-                      </TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {menuItems.map((item) => (
-                      <TableRow key={item.id} className="hover:bg-[#F9F5F1]">
-                        <TableCell className="font-medium text-[#5F4B32]">
-                          {item.name}
-                        </TableCell>
-                        <TableCell className="text-[#8C7851]">
-                          {item.description}
-                        </TableCell>
-                        <TableCell className="text-right font-medium text-[#5F4B32]">
-                          {item.price}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex justify-end gap-2">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 text-[#8C7851]"
-                            >
-                              <Edit className="h-4 w-4" />
-                              <span className="sr-only">Edit</span>
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 text-red-500"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                              <span className="sr-only">Delete</span>
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              ) : (
-                <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <Coffee className="h-12 w-12 text-[#8C7851] mb-4 opacity-50" />
-                  <h3 className="text-lg font-medium text-[#5F4B32]">
-                    No items found
-                  </h3>
-                  <p className="text-sm text-[#8C7851] mt-1">
-                    This category doesn't have any menu items yet.
-                  </p>
-                  <Button className="mt-4 bg-[#8C7851] hover:bg-[#6F5B3E] text-white">
-                    <Plus className="mr-2 h-4 w-4" />
-                    Add First Item
-                  </Button>
-                </div>
-              )
-            ) : (
-              <div className="flex flex-col items-center justify-center py-12 text-center">
-                <Coffee className="h-12 w-12 text-[#8C7851] mb-4 opacity-50" />
-                <h3 className="text-lg font-medium text-[#5F4B32]">
-                  Select a category
-                </h3>
-                <p className="text-sm text-[#8C7851] mt-1">
-                  Click on a category from the left to view its menu items
-                </p>
-              </div>
-            )}
-          </CardContent> */}
+          <CategoryItems
+            id={selectedCategory}
+            ingredients={allIngredients}
+            selectedCategory={selectedCategory}
+            menuItems={menuItemsById}
+          />
         </Card>
       </div>
     </div>
