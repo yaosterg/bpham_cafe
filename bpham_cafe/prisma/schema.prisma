@@ -39,6 +39,7 @@ model Item{
 model ItemIngredient {
   itemId        Int
   ingredientId  Int
+  qty Float @default(0)
  item       Item       @relation(fields: [itemId], references: [id], onDelete: Cascade)
   ingredient Ingredient @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
 

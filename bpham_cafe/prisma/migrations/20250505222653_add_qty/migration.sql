@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "ItemIngredient" ADD COLUMN     "qty" DOUBLE PRECISION NOT NULL DEFAULT 0;

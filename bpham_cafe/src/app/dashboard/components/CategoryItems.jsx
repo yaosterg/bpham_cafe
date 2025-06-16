@@ -6,6 +6,7 @@ import {
   createMenuItem,
   selectMenuItemsById,
   deleteMenuItem,
+  updateMenuItem,
 } from "@/store/reducers/itemSlice";
 import axios from "axios";
 
@@ -49,19 +50,30 @@ export default function CategoryItems({
     return ingredients.find((ingredient) => ingredient.id === id);
   };
 
+  const formatIngredients = (ingredientArray) => {
+    let newIngArray = [];
+    for (let items of ingredientArray) {
+      let chosen = ingredients.find((item) => item.id === items.ingredientId);
+      newIngArray.push({ ingredientId: chosen.id, quantity: items.qty });
+    }
+    return newIngArray;
+  };
+
   // Handle edit button click
   const handleEdit = async (item) => {
     setCurrentItem(item);
     const { data } = await axios.get(`/api/menu/getmenuingredients/${item.id}`);
+    const ingList = formatIngredients(data.ingredients);
 
     setFormData({
       name: item.name,
       description: item.description,
       cost: item.price,
-      ingredients: [...data.ingredients],
+      ingredients: [...ingList],
       status: item.status,
       imageURL: item.imageURL || "",
     });
+
     setIsEditDialogOpen(true);
   };
 
@@ -152,6 +164,7 @@ export default function CategoryItems({
       price: formData.cost === "" ? 0 : Number(formData.cost),
       categoryId: selectedCategory,
     };
+    console.log("this is savedData", formattedData, formData);
 
     if (!currentItem) {
       // Add new item
@@ -162,6 +175,7 @@ export default function CategoryItems({
       //   item.id === currentItem.id ? { ...item, ...formattedData } : item
       // );
       // setMenuItems(updatedItems);
+      await dispatch(updateMenuItem(formattedData));
     }
     setIsEditDialogOpen(false);
   };

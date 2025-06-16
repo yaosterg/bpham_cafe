@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import {
   Coffee,
   ShoppingCart,
@@ -10,6 +11,8 @@ import {
   CupSoda,
   Check,
   User,
+  ConciergeBell,
+  Feather,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -26,8 +29,13 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import {
+  findAllCategories,
+  selectAllCategories,
+} from "@/store/reducers/categorySlice";
 
 export default function Order() {
+  const dispatch = useDispatch();
   const [loading, setLoading] = useState(true);
   const [cart, setCart] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("espresso-drinks");
@@ -35,14 +43,15 @@ export default function Order() {
   const [checkoutState, setCheckoutState] = useState("browsing"); // browsing, processing, success
   const [customerName, setCustomerName] = useState("");
   const [nameEntered, setNameEntered] = useState(false);
+  const categories = useSelector(selectAllCategories);
 
   // Simulate loading
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 2000);
-
-    return () => clearTimeout(timer);
+    const findCategories = async () => {
+      await dispatch(findAllCategories());
+    };
+    findCategories();
+    setLoading(false);
   }, []);
 
   // Process checkout
@@ -65,31 +74,6 @@ export default function Order() {
     }
   };
 
-  // Mock database categories
-  const categories = [
-    {
-      id: "espresso-drinks",
-      name: "Espresso Drinks",
-      icon: <Coffee className="h-4 w-4" />,
-    },
-    {
-      id: "brewed-coffee",
-      name: "Brewed Coffee",
-      icon: <CupSoda className="h-4 w-4" />,
-    },
-    {
-      id: "cold-drinks",
-      name: "Cold Drinks",
-      icon: <CupSoda className="h-4 w-4" />,
-    },
-    {
-      id: "specialty",
-      name: "Specialty",
-      icon: <Coffee className="h-4 w-4" />,
-    },
-  ];
-
-  // Coffee menu items with categories and options
   const coffeeItems = [
     {
       id: 1,
@@ -914,8 +898,16 @@ export default function Order() {
                 value={category.id}
                 className="px-2 py-2 data-[state=active]:bg-white data-[state=active]:text-amber-800 rounded-md flex items-center justify-center gap-1.5 text-sm"
               >
-                {category.icon}
-                <span className="truncate">{category.name}</span>
+                {category.category === "Bakery" ? (
+                  <ConciergeBell className="h-4 w-4" />
+                ) : category.category === "Signature Latte" ? (
+                  <CupSoda className="h-4 w-4" />
+                ) : category.category === "Classic Latte" ? (
+                  <Coffee className="h-4 w-4" />
+                ) : (
+                  <Feather className="h-4 w-4" />
+                )}
+                <span className="truncate">{category.category}</span>
               </TabsTrigger>
             ))}
           </TabsList>

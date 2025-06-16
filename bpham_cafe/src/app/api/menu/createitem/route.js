@@ -17,6 +17,7 @@ export async function POST(req) {
         ingredients: {
           create: formData.ingredients.map((ingredient) => ({
             ingredientId: ingredient.ingredientId,
+            qty: ingredient.quantity,
           })),
         },
       },

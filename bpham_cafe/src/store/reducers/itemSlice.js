@@ -22,6 +22,14 @@ export const createMenuItem = createAsyncThunk(
   }
 );
 
+export const updateMenuItem = createAsyncThunk(
+  "menu/updateMenuItem",
+  async (item) => {
+    const { data } = await axios.put(`api/menu/updateitem/${item.id}`, item);
+    return data;
+  }
+);
+
 export const deleteMenuItem = createAsyncThunk(
   "menu/deleteMenuItem",
   async (item) => {
@@ -52,6 +60,17 @@ export const itemSlice = createSlice({
         let deletedItem = action.payload.item;
         state.menuItemsById = state.menuItemsById.filter(
           (item) => item.id !== deletedItem.id
+        );
+      })
+      .addCase(updateMenuItem.fulfilled, (state, action) => {
+        const updatedItem = action.payload.item;
+
+        // Properly replace in array
+        state.menuItemsById = state.menuItemsById.map((item) =>
+          item.id === updatedItem.id ? updatedItem : item
+        );
+        state.menuItemsById = state.menuItemsById.sort((a, b) =>
+          a.name.localeCompare(b.name)
         );
       });
   },
