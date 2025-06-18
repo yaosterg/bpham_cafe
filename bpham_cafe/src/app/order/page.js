@@ -40,7 +40,7 @@ export default function Order() {
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(true);
   const [cart, setCart] = useState([]);
-  const [selectedCategory, setSelectedCategory] = useState("espresso-drinks");
+  const [selectedCategory, setSelectedCategory] = useState("Bakery");
   const [selectedItem, setSelectedItem] = useState();
   const [checkoutState, setCheckoutState] = useState("browsing"); // browsing, processing, success
   const [customerName, setCustomerName] = useState("");
@@ -78,38 +78,8 @@ export default function Order() {
     }
   };
 
-  // const coffeeItems = [
-  //   {
-  //     id: 1,
-  //     name: "Espresso",
-  //     description: "Strong, concentrated coffee served in a small cup",
-  //     price: 3.5,
-  //     image: "/rich-espresso-pour.png",
-  //     category: "espresso-drinks",
-  //     options: {
-  //       size: [
-  //         { id: "single", name: "Single", price: 0 },
-  //         { id: "double", name: "Double", price: 1.5 },
-  //         { id: "triple", name: "Triple", price: 2.5 },
-  //       ],
-  //       extras: [
-  //         { id: "extra-hot", name: "Extra Hot", price: 0 },
-  //         { id: "ristretto", name: "Ristretto Style", price: 0 },
-  //       ],
-  //     },
-  //   },
-  // ];
-
-  // Initialize selected options for an item
   const initializeSelectedOptions = (item) => {
     const selectedOptions = {};
-
-    // for (const [category, options] of Object.entries(item.options)) {
-    //   if (options.length > 0) {
-    //     selectedOptions[category] = options[0].id;
-    //   }
-    // }
-
     return selectedOptions;
   };
 
@@ -147,8 +117,7 @@ export default function Order() {
 
   // Add item to cart with selected options
   const addToCart = (item, selectedOptions) => {
-    // const additionalPrice = calculateOptionsPrice(item, selectedOptions);
-    // const totalPrice = item.price + additionalPrice;
+    const totalPrice = Number(item.price);
 
     // Create a unique ID based on the item and its options
     const optionsString = JSON.stringify(selectedOptions);
@@ -162,7 +131,10 @@ export default function Order() {
       if (existingItemIndex >= 0) {
         // Item with same options exists, update quantity
         const updatedCart = [...prevCart];
-        updatedCart[existingItemIndex].quantity += 1;
+        updatedCart[existingItemIndex] = {
+          ...updatedCart[existingItemIndex],
+          quantity: updatedCart[existingItemIndex].quantity + 1,
+        };
         return updatedCart;
       } else {
         // Add new item to cart
@@ -172,11 +144,12 @@ export default function Order() {
             id: item.id,
             uniqueId,
             name: item.name,
-            basePrice: item.price,
-            totalPrice,
+            price: item.price,
             quantity: 1,
+            totalPrice,
             selectedOptions,
-            image: item.imageURL,
+            imageURL: item.imageURL,
+            notes: item.notes,
           },
         ];
       }
@@ -196,7 +169,10 @@ export default function Order() {
       if (existingItemIndex >= 0 && prevCart[existingItemIndex].quantity > 1) {
         // Decrease quantity
         const updatedCart = [...prevCart];
-        updatedCart[existingItemIndex].quantity -= 1;
+        updatedCart[existingItemIndex] = {
+          ...updatedCart[existingItemIndex],
+          quantity: updatedCart[existingItemIndex].quantity - 1,
+        };
         return updatedCart;
       } else {
         // Remove item
@@ -407,6 +383,17 @@ export default function Order() {
       </div>
     );
   }
+  const allOptionsSelected =
+    selectedItem &&
+    selectedItem.options &&
+    Object.keys(selectedItem.options).every((optionType) => {
+      // check selectedOptions exists and has a non-empty value for each optionType
+      return (
+        selectedItem.selectedOptions &&
+        selectedItem.selectedOptions[optionType] !== undefined &&
+        selectedItem.selectedOptions[optionType] !== ""
+      );
+    });
 
   return (
     <div className="min-h-screen bg-amber-50 pb-20 font-sans">
@@ -487,11 +474,16 @@ export default function Order() {
                             </h3>
                             {formattedOptions.map((option, idx) => (
                               <p key={idx} className="text-xs text-amber-700">
-                                {option}
+                                {option[0].toUpperCase() + option.slice(1)}
                               </p>
                             ))}
                             <p className="text-sm text-amber-800 mt-1 font-medium">
-                              ${item.totalPrice.toFixed(2)} × {item.quantity}
+                              ${Number(item.price).toFixed(2)}
+                            </p>
+                            <p className="text-sm text-amber-800 mt-1 font-medium">
+                              {item.notes.length > 0 ? (
+                                <>Notes: {item.notes}</>
+                              ) : null}
                             </p>
                           </div>
                           <div className="flex items-center gap-2">
@@ -722,7 +714,7 @@ export default function Order() {
                             </p>
                           ))}
                           <p className="text-sm text-amber-800 mt-1 font-medium">
-                            ${item.totalPrice.toFixed(2)} × {item.quantity}
+                            ${Number(item.price).toFixed(2)} × {item.quantity}
                           </p>
                         </div>
                         <div className="flex items-center gap-2">
@@ -811,7 +803,7 @@ export default function Order() {
                     {selectedItem.name}
                   </h3>
                   <p className="text-sm text-amber-600">
-                    ${Number(selectedItem.price).toFixed(2)}
+                    {selectedItem.description}
                   </p>
                 </div>
               </div>
@@ -902,250 +894,6 @@ export default function Order() {
                   </div>
                 )}
 
-                {/* {selectedItem.options.size && (
-                  <div className="bg-amber-50 p-4 rounded-lg">
-                    <h4 className="font-medium mb-3 text-amber-900">
-                      Choose Size
-                    </h4>
-                    <RadioGroup
-                      value={selectedItem.selectedOptions.size}
-                      onValueChange={(value) => {
-                        setSelectedItem({
-                          ...selectedItem,
-                          selectedOptions: {
-                            ...selectedItem.selectedOptions,
-                            size: value,
-                          },
-                        });
-                      }}
-                    >
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        {selectedItem.options.size.map((option) => (
-                          <div
-                            key={option.id}
-                            className="flex items-center justify-between bg-white p-2 rounded-lg border border-amber-100 hover:border-amber-300 transition-colors"
-                          >
-                            <div className="flex items-center gap-2">
-                              <RadioGroupItem
-                                value={option.id}
-                                id={`size-${option.id}`}
-                                className="text-amber-700"
-                              />
-                              <Label
-                                htmlFor={`size-${option.id}`}
-                                className="text-amber-900 font-medium cursor-pointer"
-                              >
-                                {option.name}
-                              </Label>
-                            </div>
-                            {option.price > 0 && (
-                              <span className="text-amber-700 text-sm font-medium">
-                                +${option.price.toFixed(2)}
-                              </span>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </RadioGroup>
-                  </div>
-                )} */}
-
-                {/* Milk Options */}
-                {/* {selectedItem.options.milk && (
-                  <div className="bg-amber-50 p-4 rounded-lg">
-                    <h4 className="font-medium mb-3 text-amber-900">
-                      Choose Milk
-                    </h4>
-                    <RadioGroup
-                      value={selectedItem.selectedOptions.milk}
-                      onValueChange={(value) => {
-                        setSelectedItem({
-                          ...selectedItem,
-                          selectedOptions: {
-                            ...selectedItem.selectedOptions,
-                            milk: value,
-                          },
-                        });
-                      }}
-                    >
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        {selectedItem.options.milk.map((option) => (
-                          <div
-                            key={option.id}
-                            className="flex items-center justify-between bg-white p-2 rounded-lg border border-amber-100 hover:border-amber-300 transition-colors"
-                          >
-                            <div className="flex items-center gap-2">
-                              <RadioGroupItem
-                                value={option.id}
-                                id={`milk-${option.id}`}
-                                className="text-amber-700"
-                              />
-                              <Label
-                                htmlFor={`milk-${option.id}`}
-                                className="text-amber-900 font-medium cursor-pointer"
-                              >
-                                {option.name}
-                              </Label>
-                            </div>
-                            {option.price > 0 && (
-                              <span className="text-amber-700 text-sm font-medium">
-                                +${option.price.toFixed(2)}
-                              </span>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </RadioGroup>
-                  </div>
-                )} */}
-
-                {/* Flavor Options */}
-                {/* {selectedItem.options.flavor && (
-                  <div className="bg-amber-50 p-4 rounded-lg">
-                    <h4 className="font-medium mb-3 text-amber-900">
-                      Choose Flavor
-                    </h4>
-                    <RadioGroup
-                      value={selectedItem.selectedOptions.flavor}
-                      onValueChange={(value) => {
-                        setSelectedItem({
-                          ...selectedItem,
-                          selectedOptions: {
-                            ...selectedItem.selectedOptions,
-                            flavor: value,
-                          },
-                        });
-                      }}
-                    >
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        {selectedItem.options.flavor.map((option) => (
-                          <div
-                            key={option.id}
-                            className="flex items-center justify-between bg-white p-2 rounded-lg border border-amber-100 hover:border-amber-300 transition-colors"
-                          >
-                            <div className="flex items-center gap-2">
-                              <RadioGroupItem
-                                value={option.id}
-                                id={`flavor-${option.id}`}
-                                className="text-amber-700"
-                              />
-                              <Label
-                                htmlFor={`flavor-${option.id}`}
-                                className="text-amber-900 font-medium cursor-pointer"
-                              >
-                                {option.name}
-                              </Label>
-                            </div>
-                            {option.price > 0 && (
-                              <span className="text-amber-700 text-sm font-medium">
-                                +${option.price.toFixed(2)}
-                              </span>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </RadioGroup>
-                  </div>
-                )} */}
-
-                {/* Roast Options */}
-                {/* {selectedItem.options.roast && (
-                  <div className="bg-amber-50 p-4 rounded-lg">
-                    <h4 className="font-medium mb-3 text-amber-900">
-                      Choose Roast
-                    </h4>
-                    <RadioGroup
-                      value={selectedItem.selectedOptions.roast}
-                      onValueChange={(value) => {
-                        setSelectedItem({
-                          ...selectedItem,
-                          selectedOptions: {
-                            ...selectedItem.selectedOptions,
-                            roast: value,
-                          },
-                        });
-                      }}
-                    >
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        {selectedItem.options.roast.map((option) => (
-                          <div
-                            key={option.id}
-                            className="flex items-center justify-between bg-white p-2 rounded-lg border border-amber-100 hover:border-amber-300 transition-colors"
-                          >
-                            <div className="flex items-center gap-2">
-                              <RadioGroupItem
-                                value={option.id}
-                                id={`roast-${option.id}`}
-                                className="text-amber-700"
-                              />
-                              <Label
-                                htmlFor={`roast-${option.id}`}
-                                className="text-amber-900 font-medium cursor-pointer"
-                              >
-                                {option.name}
-                              </Label>
-                            </div>
-                            {option.price > 0 && (
-                              <span className="text-amber-700 text-sm font-medium">
-                                +${option.price.toFixed(2)}
-                              </span>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </RadioGroup>
-                  </div>
-                )} */}
-
-                {/* Bean Options */}
-                {/* {selectedItem.options.bean && (
-                  <div className="bg-amber-50 p-4 rounded-lg">
-                    <h4 className="font-medium mb-3 text-amber-900">
-                      Choose Bean
-                    </h4>
-                    <RadioGroup
-                      value={selectedItem.selectedOptions.bean}
-                      onValueChange={(value) => {
-                        setSelectedItem({
-                          ...selectedItem,
-                          selectedOptions: {
-                            ...selectedItem.selectedOptions,
-                            bean: value,
-                          },
-                        });
-                      }}
-                    >
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        {selectedItem.options.bean.map((option) => (
-                          <div
-                            key={option.id}
-                            className="flex items-center justify-between bg-white p-2 rounded-lg border border-amber-100 hover:border-amber-300 transition-colors"
-                          >
-                            <div className="flex items-center gap-2">
-                              <RadioGroupItem
-                                value={option.id}
-                                id={`bean-${option.id}`}
-                                className="text-amber-700"
-                              />
-                              <Label
-                                htmlFor={`bean-${option.id}`}
-                                className="text-amber-900 font-medium cursor-pointer"
-                              >
-                                {option.name}
-                              </Label>
-                            </div>
-                            {option.price > 0 && (
-                              <span className="text-amber-700 text-sm font-medium">
-                                +${option.price.toFixed(2)}
-                              </span>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </RadioGroup>
-                  </div>
-                )} */}
-
                 {/* Notes for Barista */}
                 <div className="bg-amber-50 p-4 rounded-lg">
                   <h4 className="font-medium mb-3 text-amber-900">
@@ -1170,22 +918,20 @@ export default function Order() {
                 <div className="flex justify-between items-center bg-amber-50 p-4 rounded-lg">
                   <div>
                     <p className="text-sm text-amber-700">Total price</p>
-                    {/* <p className="text-xl font-bold text-amber-900">
-                      $
-                      {(
-                        selectedItem.price +
-                        calculateOptionsPrice(
-                          selectedItem,
-                          selectedItem.selectedOptions
-                        )
-                      ).toFixed(2)}
-                    </p> */}
+                    <p className="text-xl font-bold text-amber-900">
+                      ${Number(selectedItem.price).toFixed(2)}
+                    </p>
                   </div>
                   <Button
                     onClick={() =>
                       addToCart(selectedItem, selectedItem.selectedOptions)
                     }
-                    className="bg-amber-800 hover:bg-amber-900 rounded-md px-6 py-6"
+                    disabled={!allOptionsSelected}
+                    className={`rounded-md px-6 py-6 ${
+                      allOptionsSelected
+                        ? "bg-amber-800 hover:bg-amber-900"
+                        : "bg-amber-300 cursor-not-allowed"
+                    }`}
                   >
                     Add to Cart
                   </Button>
