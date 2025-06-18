@@ -32,6 +32,7 @@ model Item{
   price Decimal
   ingredients  ItemIngredient[]
   menuStatus Boolean
+  options Json @default("{}")
   categoryId   Int              // Foreign key
   category     Category         @relation(fields: [categoryId], references: [id])
 }

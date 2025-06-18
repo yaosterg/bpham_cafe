@@ -40,7 +40,7 @@ export default function Order() {
   const [loading, setLoading] = useState(true);
   const [cart, setCart] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("espresso-drinks");
-  const [selectedItem, setSelectedItem] = useState({});
+  const [selectedItem, setSelectedItem] = useState();
   const [checkoutState, setCheckoutState] = useState("browsing"); // browsing, processing, success
   const [customerName, setCustomerName] = useState("");
   const [nameEntered, setNameEntered] = useState(false);
@@ -103,16 +103,11 @@ export default function Order() {
   const initializeSelectedOptions = (item) => {
     const selectedOptions = {};
 
-    for (const [category, options] of Object.entries(item.options)) {
-      if (options.length > 0) {
-        selectedOptions[category] = options[0].id;
-      }
-    }
-
-    // For checkboxes (extras)
-    if (item.options.extras) {
-      selectedOptions.extras = [];
-    }
+    // for (const [category, options] of Object.entries(item.options)) {
+    //   if (options.length > 0) {
+    //     selectedOptions[category] = options[0].id;
+    //   }
+    // }
 
     return selectedOptions;
   };
@@ -121,35 +116,26 @@ export default function Order() {
   const openCustomization = (item) => {
     setSelectedItem({
       ...item,
+      notes: "",
       selectedOptions: initializeSelectedOptions(item),
     });
   };
 
   // Calculate additional price from options
-  const calculateOptionsPrice = (item, selectedOptions) => {
-    let additionalPrice = 0;
+  // const calculateOptionsPrice = (item, selectedOptions) => {
+  //   let additionalPrice = 0;
 
-    for (const [category, optionId] of Object.entries(selectedOptions)) {
-      if (category === "extras" || category === "notes") continue; // Handle extras separately
+  //   for (const [category, optionId] of Object.entries(selectedOptions)) {
+  //     if (category === "extras" || category === "notes") continue; // Handle extras separately
 
-      const option = item.options[category]?.find((opt) => opt.id === optionId);
-      if (option) {
-        additionalPrice += option.price;
-      }
-    }
+  //     const option = item.options[category]?.find((opt) => opt.id === optionId);
+  //     if (option) {
+  //       additionalPrice += option.price;
+  //     }
+  //   }
 
-    // Add extras prices
-    if (selectedOptions.extras && Array.isArray(selectedOptions.extras)) {
-      for (const extraId of selectedOptions.extras) {
-        const extra = item.options.extras?.find((opt) => opt.id === extraId);
-        if (extra) {
-          additionalPrice += extra.price;
-        }
-      }
-    }
-
-    return additionalPrice;
-  };
+  //   return additionalPrice;
+  // };
 
   // Get option name by ID
   const getOptionNameById = (item, category, optionId) => {
@@ -160,8 +146,8 @@ export default function Order() {
 
   // Add item to cart with selected options
   const addToCart = (item, selectedOptions) => {
-    const additionalPrice = calculateOptionsPrice(item, selectedOptions);
-    const totalPrice = item.price + additionalPrice;
+    // const additionalPrice = calculateOptionsPrice(item, selectedOptions);
+    // const totalPrice = item.price + additionalPrice;
 
     // Create a unique ID based on the item and its options
     const optionsString = JSON.stringify(selectedOptions);
@@ -189,7 +175,7 @@ export default function Order() {
             totalPrice,
             quantity: 1,
             selectedOptions,
-            image: item.image,
+            image: item.imageURL,
           },
         ];
       }
@@ -261,26 +247,6 @@ export default function Order() {
       }
     }
 
-    // Add extras
-    if (
-      item.selectedOptions.extras &&
-      Array.isArray(item.selectedOptions.extras) &&
-      item.selectedOptions.extras.length > 0
-    ) {
-      const extrasNames = item.selectedOptions.extras
-        .map((extraId) => {
-          const extra = coffeeItem.options.extras?.find(
-            (opt) => opt.id === extraId
-          );
-          return extra ? extra.name : "";
-        })
-        .filter((name) => name);
-
-      if (extrasNames.length > 0) {
-        formattedOptions.push(`extras: ${extrasNames.join(", ")}`);
-      }
-    }
-
     // Add notes if present
     if (
       item.selectedOptions.notes &&
@@ -290,32 +256,6 @@ export default function Order() {
     }
 
     return formattedOptions;
-  };
-
-  // Toggle extra option
-  const toggleExtraOption = (extraId) => {
-    if (!selectedItem) return;
-
-    setSelectedItem((prev) => {
-      const updatedOptions = { ...prev.selectedOptions };
-
-      if (!updatedOptions.extras) {
-        updatedOptions.extras = [];
-      }
-
-      if (updatedOptions.extras.includes(extraId)) {
-        updatedOptions.extras = updatedOptions.extras.filter(
-          (id) => id !== extraId
-        );
-      } else {
-        updatedOptions.extras = [...updatedOptions.extras, extraId];
-      }
-
-      return {
-        ...prev,
-        selectedOptions: updatedOptions,
-      };
-    });
   };
 
   // Name input screen
@@ -535,7 +475,7 @@ export default function Order() {
                         >
                           <div className="h-16 w-16 rounded-md overflow-hidden mr-3 flex-shrink-0 border border-amber-200">
                             <img
-                              src={item.image || "/placeholder.svg"}
+                              src={item.imageURL || "/placeholder.svg"}
                               alt={item.name}
                               className="h-full w-full object-cover"
                             />
@@ -766,7 +706,7 @@ export default function Order() {
                       >
                         <div className="h-16 w-16 rounded-md overflow-hidden mr-3 flex-shrink-0 border border-amber-200">
                           <img
-                            src={item.image || "/placeholder.svg"}
+                            src={item.imageURL || "/placeholder.svg"}
                             alt={item.name}
                             className="h-full w-full object-cover"
                           />
@@ -860,7 +800,7 @@ export default function Order() {
               <div className="flex items-center gap-3">
                 <div className="h-12 w-12 rounded-md overflow-hidden">
                   <img
-                    src={selectedItem.image || "/placeholder.svg"}
+                    src={selectedItem.imageURL || "/placeholder.svg"}
                     alt={selectedItem.name}
                     className="h-full w-full object-cover"
                   />
@@ -886,8 +826,75 @@ export default function Order() {
 
             <div className="p-4">
               <div className="space-y-4">
-                {/* Size Options */}
-                {selectedItem.options.size && (
+                {/*  Options */}
+                {selectedItem.options &&
+                Object.keys(selectedItem.options).length > 0 ? (
+                  Object.entries(selectedItem.options).map(
+                    ([optionType, optionValues]) => {
+                      // Skip if no options available for this type
+                      if (!optionValues || optionValues.length === 0)
+                        return null;
+
+                      return (
+                        <div key={optionType}>
+                          <RadioGroup
+                            value={
+                              selectedItem.selectedOptions?.[optionType] || ""
+                            }
+                            onValueChange={(value) => {
+                              if (!selectedItem.selectedOptions) return;
+
+                              setSelectedItem({
+                                ...selectedItem,
+                                selectedOptions: {
+                                  ...selectedItem.selectedOptions,
+                                  [optionType]: value,
+                                },
+                              });
+                            }}
+                          >
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              {optionValues.map((option) => (
+                                <div
+                                  key={option.id}
+                                  className="flex items-center justify-between bg-white p-2 rounded-lg border border-amber-100 hover:border-amber-300 transition-colors"
+                                >
+                                  <div className="flex items-center gap-2">
+                                    <RadioGroupItem
+                                      value={option.id}
+                                      id={`${optionType}-${option.id}`}
+                                      className="text-amber-700"
+                                    />
+                                    <Label
+                                      htmlFor={`${optionType}-${option.id}`}
+                                      className="text-amber-900 font-medium cursor-pointer"
+                                    >
+                                      {option.name}
+                                    </Label>
+                                  </div>
+                                  {option.price > 0 && (
+                                    <span className="text-amber-700 text-sm font-medium">
+                                      +${option.price.toFixed(2)}
+                                    </span>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          </RadioGroup>
+                        </div>
+                      );
+                    }
+                  )
+                ) : (
+                  // Show message when no options are available
+                  <div className="bg-amber-50 p-4 rounded-lg text-center">
+                    <p className="text-amber-700">
+                      No customization options available for this item.
+                    </p>
+                  </div>
+                )}
+
+                {/* {selectedItem.options.size && (
                   <div className="bg-amber-50 p-4 rounded-lg">
                     <h4 className="font-medium mb-3 text-amber-900">
                       Choose Size
@@ -933,10 +940,10 @@ export default function Order() {
                       </div>
                     </RadioGroup>
                   </div>
-                )}
+                )} */}
 
                 {/* Milk Options */}
-                {selectedItem.options.milk && (
+                {/* {selectedItem.options.milk && (
                   <div className="bg-amber-50 p-4 rounded-lg">
                     <h4 className="font-medium mb-3 text-amber-900">
                       Choose Milk
@@ -982,10 +989,10 @@ export default function Order() {
                       </div>
                     </RadioGroup>
                   </div>
-                )}
+                )} */}
 
                 {/* Flavor Options */}
-                {selectedItem.options.flavor && (
+                {/* {selectedItem.options.flavor && (
                   <div className="bg-amber-50 p-4 rounded-lg">
                     <h4 className="font-medium mb-3 text-amber-900">
                       Choose Flavor
@@ -1031,10 +1038,10 @@ export default function Order() {
                       </div>
                     </RadioGroup>
                   </div>
-                )}
+                )} */}
 
                 {/* Roast Options */}
-                {selectedItem.options.roast && (
+                {/* {selectedItem.options.roast && (
                   <div className="bg-amber-50 p-4 rounded-lg">
                     <h4 className="font-medium mb-3 text-amber-900">
                       Choose Roast
@@ -1080,10 +1087,10 @@ export default function Order() {
                       </div>
                     </RadioGroup>
                   </div>
-                )}
+                )} */}
 
                 {/* Bean Options */}
-                {selectedItem.options.bean && (
+                {/* {selectedItem.options.bean && (
                   <div className="bg-amber-50 p-4 rounded-lg">
                     <h4 className="font-medium mb-3 text-amber-900">
                       Choose Bean
@@ -1129,48 +1136,7 @@ export default function Order() {
                       </div>
                     </RadioGroup>
                   </div>
-                )}
-
-                {/* Extras Options (Checkboxes) */}
-                {selectedItem.options.extras && (
-                  <div className="bg-amber-50 p-4 rounded-lg">
-                    <h4 className="font-medium mb-3 text-amber-900">Extras</h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {selectedItem.options.extras.map((option) => (
-                        <div
-                          key={option.id}
-                          className="flex items-center justify-between bg-white p-2 rounded-lg border border-amber-100 hover:border-amber-300 transition-colors"
-                        >
-                          <div className="flex items-center gap-2">
-                            <Checkbox
-                              id={`extra-${option.id}`}
-                              checked={
-                                selectedItem.selectedOptions.extras?.includes(
-                                  option.id
-                                ) || false
-                              }
-                              onCheckedChange={() =>
-                                toggleExtraOption(option.id)
-                              }
-                              className="text-amber-700 border-amber-300"
-                            />
-                            <Label
-                              htmlFor={`extra-${option.id}`}
-                              className="text-amber-900 font-medium cursor-pointer"
-                            >
-                              {option.name}
-                            </Label>
-                          </div>
-                          {option.price > 0 && (
-                            <span className="text-amber-700 text-sm font-medium">
-                              +${option.price.toFixed(2)}
-                            </span>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                )} */}
 
                 {/* Notes for Barista */}
                 <div className="bg-amber-50 p-4 rounded-lg">
@@ -1181,14 +1147,11 @@ export default function Order() {
                     className="w-full p-3 rounded-lg border border-amber-200 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                     placeholder="Any special requests for the barista? (e.g., extra hot, light ice, etc.)"
                     rows={3}
-                    value={selectedItem.selectedOptions.notes || ""}
+                    value={selectedItem.notes || ""}
                     onChange={(e) => {
                       setSelectedItem({
                         ...selectedItem,
-                        selectedOptions: {
-                          ...selectedItem.selectedOptions,
-                          notes: e.target.value,
-                        },
+                        notes: e.target.value,
                       });
                     }}
                   />
@@ -1199,7 +1162,7 @@ export default function Order() {
                 <div className="flex justify-between items-center bg-amber-50 p-4 rounded-lg">
                   <div>
                     <p className="text-sm text-amber-700">Total price</p>
-                    <p className="text-xl font-bold text-amber-900">
+                    {/* <p className="text-xl font-bold text-amber-900">
                       $
                       {(
                         selectedItem.price +
@@ -1208,7 +1171,7 @@ export default function Order() {
                           selectedItem.selectedOptions
                         )
                       ).toFixed(2)}
-                    </p>
+                    </p> */}
                   </div>
                   <Button
                     onClick={() =>

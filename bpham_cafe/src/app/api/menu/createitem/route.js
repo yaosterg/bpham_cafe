@@ -14,6 +14,7 @@ export async function POST(req) {
         imageURL: formData.imageURL,
         menuStatus: formData.status,
         categoryId: formData.categoryId,
+        options: formData.options,
         ingredients: {
           create: formData.ingredients.map((ingredient) => ({
             ingredientId: ingredient.ingredientId,

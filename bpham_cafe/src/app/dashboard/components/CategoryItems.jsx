@@ -27,6 +27,7 @@ export default function CategoryItems({
     ingredients: [],
     status: true,
     imageURL: "",
+    options: {},
   });
   const dispatch = useDispatch();
   const [menuIngredients, setMenuIngredients] = useState([]);
@@ -72,6 +73,7 @@ export default function CategoryItems({
       ingredients: [...ingList],
       status: item.status,
       imageURL: item.imageURL || "",
+      options: item.options || {},
     });
 
     setIsEditDialogOpen(true);
@@ -223,6 +225,7 @@ export default function CategoryItems({
                 ingredients: [],
                 status: true,
                 imageURL: "",
+                options: {},
               });
               setIsEditDialogOpen(true);
             }}
@@ -631,6 +634,62 @@ export default function CategoryItems({
                         setFormData({ ...formData, status: !formData.status })
                       }
                       label="Menu Status:"
+                    />
+                  </div>
+
+                  {/* Options Section */}
+                  <div className="p-4 bg-white rounded-xl border border-[#d1c5b5] shadow-sm">
+                    <ToggleSwitch
+                      checked={"milk" in (formData.options ?? {})}
+                      onChange={() => {
+                        setFormData((prev) => {
+                          if ("milk" in prev.options) {
+                            // Remove 'milk' key
+                            const { milk, ...rest } = prev.options;
+                            return { ...prev, options: rest };
+                          } else {
+                            // Add 'milk' key with fixed object
+                            return {
+                              ...prev,
+                              options: {
+                                ...prev.options,
+                                milk: [
+                                  ({ id: "regular", name: "Regular" },
+                                  { id: "lactaid", name: "Lactaid" },
+                                  { id: "oat", name: "Oat" },
+                                  { id: "almond", name: "Almond" }),
+                                ],
+                              },
+                            };
+                          }
+                        });
+                      }}
+                      label="Milk Options (Regular/Lactaid/Oat/Almond):"
+                    />
+                  </div>
+                  <div className="p-4 bg-white rounded-xl border border-[#d1c5b5] shadow-sm">
+                    <ToggleSwitch
+                      checked={"temp" in (formData.options ?? {})}
+                      onChange={() => {
+                        setFormData((prev) => {
+                          if ("temp" in prev.options) {
+                            const { temp, ...rest } = prev.options;
+                            return { ...prev, options: rest };
+                          } else {
+                            return {
+                              ...prev,
+                              options: {
+                                ...prev.options,
+                                temp: [
+                                  ({ id: "hot", name: "Hot" },
+                                  { id: "cold", name: "Cold" }),
+                                ],
+                              },
+                            };
+                          }
+                        });
+                      }}
+                      label="Tempature Options (Hot/Cold):"
                     />
                   </div>
 
