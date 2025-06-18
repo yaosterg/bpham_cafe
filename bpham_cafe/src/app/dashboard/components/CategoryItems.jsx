@@ -654,10 +654,10 @@ export default function CategoryItems({
                               options: {
                                 ...prev.options,
                                 milk: [
-                                  ({ id: "regular", name: "Regular" },
+                                  { id: "regular", name: "Regular" },
                                   { id: "lactaid", name: "Lactaid" },
                                   { id: "oat", name: "Oat" },
-                                  { id: "almond", name: "Almond" }),
+                                  { id: "almond", name: "Almond" },
                                 ],
                               },
                             };
@@ -681,8 +681,8 @@ export default function CategoryItems({
                               options: {
                                 ...prev.options,
                                 temp: [
-                                  ({ id: "hot", name: "Hot" },
-                                  { id: "cold", name: "Cold" }),
+                                  { id: "hot", name: "Hot" },
+                                  { id: "cold", name: "Cold" },
                                 ],
                               },
                             };

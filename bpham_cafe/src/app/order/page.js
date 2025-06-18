@@ -34,6 +34,7 @@ import {
   selectAllCategories,
 } from "@/store/reducers/categorySlice";
 import { selectAllMenuItems, findAllItems } from "@/store/reducers/itemSlice";
+import Image from "next/image";
 
 export default function Order() {
   const dispatch = useDispatch();
@@ -837,50 +838,57 @@ export default function Order() {
 
                       return (
                         <div key={optionType}>
-                          <RadioGroup
-                            value={
-                              selectedItem.selectedOptions?.[optionType] || ""
-                            }
-                            onValueChange={(value) => {
-                              if (!selectedItem.selectedOptions) return;
+                          <div className="bg-amber-50 p-4 rounded-lg">
+                            <h4 className="font-medium mb-3 text-amber-900">
+                              Choose{" "}
+                              {optionType.charAt(0).toUpperCase() +
+                                optionType.slice(1)}
+                            </h4>
+                            <RadioGroup
+                              value={
+                                selectedItem.selectedOptions?.[optionType] || ""
+                              }
+                              onValueChange={(value) => {
+                                if (!selectedItem.selectedOptions) return;
 
-                              setSelectedItem({
-                                ...selectedItem,
-                                selectedOptions: {
-                                  ...selectedItem.selectedOptions,
-                                  [optionType]: value,
-                                },
-                              });
-                            }}
-                          >
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                              {optionValues.map((option) => (
-                                <div
-                                  key={option.id}
-                                  className="flex items-center justify-between bg-white p-2 rounded-lg border border-amber-100 hover:border-amber-300 transition-colors"
-                                >
-                                  <div className="flex items-center gap-2">
-                                    <RadioGroupItem
-                                      value={option.id}
-                                      id={`${optionType}-${option.id}`}
-                                      className="text-amber-700"
-                                    />
-                                    <Label
-                                      htmlFor={`${optionType}-${option.id}`}
-                                      className="text-amber-900 font-medium cursor-pointer"
-                                    >
-                                      {option.name}
-                                    </Label>
+                                setSelectedItem({
+                                  ...selectedItem,
+                                  selectedOptions: {
+                                    ...selectedItem.selectedOptions,
+                                    [optionType]: value,
+                                  },
+                                });
+                              }}
+                            >
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                {optionValues.map((option) => (
+                                  <div
+                                    key={option.id}
+                                    className="flex items-center justify-between bg-white p-2 rounded-lg border border-amber-100 hover:border-amber-300 transition-colors"
+                                  >
+                                    <div className="flex items-center gap-2">
+                                      <RadioGroupItem
+                                        value={option.id}
+                                        id={`${optionType}-${option.id}`}
+                                        className="text-amber-700"
+                                      />
+                                      <Label
+                                        htmlFor={`${optionType}-${option.id}`}
+                                        className="text-amber-900 font-medium cursor-pointer"
+                                      >
+                                        {option.name}
+                                      </Label>
+                                    </div>
+                                    {/* {option.price > 0 && (
+                                      <span className="text-amber-700 text-sm font-medium">
+                                        +${option.price.toFixed(2)}
+                                      </span>
+                                    )} */}
                                   </div>
-                                  {option.price > 0 && (
-                                    <span className="text-amber-700 text-sm font-medium">
-                                      +${option.price.toFixed(2)}
-                                    </span>
-                                  )}
-                                </div>
-                              ))}
-                            </div>
-                          </RadioGroup>
+                                ))}
+                              </div>
+                            </RadioGroup>
+                          </div>
                         </div>
                       );
                     }
