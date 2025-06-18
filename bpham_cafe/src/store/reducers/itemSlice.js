@@ -56,6 +56,9 @@ export const itemSlice = createSlice({
       .addCase(findItemById.fulfilled, (state, action) => {
         state.menuItemsById = action.payload.items;
       })
+      .addCase(findAllItems.fulfilled, (state, action) => {
+        state.allItems = action.payload.items;
+      })
       .addCase(deleteMenuItem.fulfilled, (state, action) => {
         let deletedItem = action.payload.item;
         state.menuItemsById = state.menuItemsById.filter(
@@ -64,8 +67,6 @@ export const itemSlice = createSlice({
       })
       .addCase(updateMenuItem.fulfilled, (state, action) => {
         const updatedItem = action.payload.item;
-
-        // Properly replace in array
         state.menuItemsById = state.menuItemsById.map((item) =>
           item.id === updatedItem.id ? updatedItem : item
         );

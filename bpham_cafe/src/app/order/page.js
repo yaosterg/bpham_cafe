@@ -33,22 +33,25 @@ import {
   findAllCategories,
   selectAllCategories,
 } from "@/store/reducers/categorySlice";
+import { selectAllMenuItems, findAllItems } from "@/store/reducers/itemSlice";
 
 export default function Order() {
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(true);
   const [cart, setCart] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("espresso-drinks");
-  const [selectedItem, setSelectedItem] = useState(null);
+  const [selectedItem, setSelectedItem] = useState({});
   const [checkoutState, setCheckoutState] = useState("browsing"); // browsing, processing, success
   const [customerName, setCustomerName] = useState("");
   const [nameEntered, setNameEntered] = useState(false);
   const categories = useSelector(selectAllCategories);
+  const menuItems = useSelector(selectAllMenuItems);
 
   // Simulate loading
   useEffect(() => {
     const findCategories = async () => {
       await dispatch(findAllCategories());
+      await dispatch(findAllItems());
     };
     findCategories();
     setLoading(false);
@@ -74,289 +77,27 @@ export default function Order() {
     }
   };
 
-  const coffeeItems = [
-    {
-      id: 1,
-      name: "Espresso",
-      description: "Strong, concentrated coffee served in a small cup",
-      price: 3.5,
-      image: "/rich-espresso-pour.png",
-      category: "espresso-drinks",
-      options: {
-        size: [
-          { id: "single", name: "Single", price: 0 },
-          { id: "double", name: "Double", price: 1.5 },
-          { id: "triple", name: "Triple", price: 2.5 },
-        ],
-        extras: [
-          { id: "extra-hot", name: "Extra Hot", price: 0 },
-          { id: "ristretto", name: "Ristretto Style", price: 0 },
-        ],
-      },
-    },
-    {
-      id: 2,
-      name: "Cappuccino",
-      description: "Equal parts espresso, steamed milk, and milk foam",
-      price: 4.5,
-      image: "/frothy-cappuccino.png",
-      category: "espresso-drinks",
-      options: {
-        size: [
-          { id: "small", name: "Small", price: 0 },
-          { id: "medium", name: "Medium", price: 0.75 },
-          { id: "large", name: "Large", price: 1.5 },
-        ],
-        milk: [
-          { id: "whole", name: "Whole Milk", price: 0 },
-          { id: "skim", name: "Skim Milk", price: 0 },
-          { id: "almond", name: "Almond Milk", price: 0.75 },
-          { id: "oat", name: "Oat Milk", price: 0.75 },
-        ],
-        extras: [
-          { id: "extra-shot", name: "Extra Shot", price: 1 },
-          { id: "extra-foam", name: "Extra Foam", price: 0 },
-        ],
-      },
-    },
-    {
-      id: 3,
-      name: "Latte",
-      description: "Espresso with steamed milk and a light layer of foam",
-      price: 4.75,
-      image: "/latte-art-heart.png",
-      category: "espresso-drinks",
-      options: {
-        size: [
-          { id: "small", name: "Small", price: 0 },
-          { id: "medium", name: "Medium", price: 0.75 },
-          { id: "large", name: "Large", price: 1.5 },
-        ],
-        milk: [
-          { id: "whole", name: "Whole Milk", price: 0 },
-          { id: "skim", name: "Skim Milk", price: 0 },
-          { id: "almond", name: "Almond Milk", price: 0.75 },
-          { id: "oat", name: "Oat Milk", price: 0.75 },
-        ],
-        flavor: [
-          { id: "none", name: "None", price: 0 },
-          { id: "vanilla", name: "Vanilla", price: 0.5 },
-          { id: "caramel", name: "Caramel", price: 0.5 },
-          { id: "hazelnut", name: "Hazelnut", price: 0.5 },
-        ],
-        extras: [{ id: "extra-shot", name: "Extra Shot", price: 1 }],
-      },
-    },
-    {
-      id: 4,
-      name: "Mocha",
-      description: "Espresso with chocolate, steamed milk, and whipped cream",
-      price: 5.25,
-      image: "/rich-coffee-mocha.png",
-      category: "espresso-drinks",
-      options: {
-        size: [
-          { id: "small", name: "Small", price: 0 },
-          { id: "medium", name: "Medium", price: 0.75 },
-          { id: "large", name: "Large", price: 1.5 },
-        ],
-        milk: [
-          { id: "whole", name: "Whole Milk", price: 0 },
-          { id: "skim", name: "Skim Milk", price: 0 },
-          { id: "almond", name: "Almond Milk", price: 0.75 },
-          { id: "oat", name: "Oat Milk", price: 0.75 },
-        ],
-        extras: [
-          { id: "extra-shot", name: "Extra Shot", price: 1 },
-          { id: "extra-chocolate", name: "Extra Chocolate", price: 0.5 },
-          { id: "no-whip", name: "No Whipped Cream", price: 0 },
-        ],
-      },
-    },
-    {
-      id: 5,
-      name: "Cold Brew",
-      description: "Coffee brewed with cold water for 12+ hours",
-      price: 4.95,
-      image: "/iced-coffee-refreshment.png",
-      category: "cold-drinks",
-      options: {
-        size: [
-          { id: "small", name: "Small", price: 0 },
-          { id: "medium", name: "Medium", price: 0.75 },
-          { id: "large", name: "Large", price: 1.5 },
-        ],
-        milk: [
-          { id: "none", name: "None", price: 0 },
-          { id: "whole", name: "Splash of Whole Milk", price: 0 },
-          { id: "almond", name: "Splash of Almond Milk", price: 0.5 },
-          { id: "oat", name: "Splash of Oat Milk", price: 0.5 },
-        ],
-        flavor: [
-          { id: "none", name: "None", price: 0 },
-          { id: "vanilla", name: "Vanilla", price: 0.5 },
-          { id: "caramel", name: "Caramel", price: 0.5 },
-        ],
-      },
-    },
-    {
-      id: 6,
-      name: "Americano",
-      description: "Espresso diluted with hot water",
-      price: 3.75,
-      image: "/classic-americano.png",
-      category: "espresso-drinks",
-      options: {
-        size: [
-          { id: "small", name: "Small", price: 0 },
-          { id: "medium", name: "Medium", price: 0.75 },
-          { id: "large", name: "Large", price: 1.5 },
-        ],
-        extras: [
-          { id: "extra-shot", name: "Extra Shot", price: 1 },
-          { id: "extra-hot", name: "Extra Hot", price: 0 },
-        ],
-      },
-    },
-    {
-      id: 7,
-      name: "Drip Coffee",
-      description: "Traditional brewed coffee, fresh all day",
-      price: 2.95,
-      image: "/drip-coffee.png",
-      category: "brewed-coffee",
-      options: {
-        size: [
-          { id: "small", name: "Small", price: 0 },
-          { id: "medium", name: "Medium", price: 0.75 },
-          { id: "large", name: "Large", price: 1.5 },
-        ],
-        roast: [
-          { id: "light", name: "Light Roast", price: 0 },
-          { id: "medium", name: "Medium Roast", price: 0 },
-          { id: "dark", name: "Dark Roast", price: 0 },
-        ],
-      },
-    },
-    {
-      id: 8,
-      name: "Pour Over",
-      description: "Hand-poured coffee for maximum flavor extraction",
-      price: 4.5,
-      image: "/pour-over.png",
-      category: "brewed-coffee",
-      options: {
-        size: [
-          { id: "small", name: "Small", price: 0 },
-          { id: "large", name: "Large", price: 1.5 },
-        ],
-        bean: [
-          { id: "ethiopia", name: "Ethiopia", price: 0 },
-          { id: "colombia", name: "Colombia", price: 0 },
-          { id: "guatemala", name: "Guatemala", price: 0 },
-        ],
-      },
-    },
-    {
-      id: 9,
-      name: "Iced Latte",
-      description: "Chilled espresso with cold milk over ice",
-      price: 5.25,
-      image: "/iced-latte.png",
-      category: "cold-drinks",
-      options: {
-        size: [
-          { id: "small", name: "Small", price: 0 },
-          { id: "medium", name: "Medium", price: 0.75 },
-          { id: "large", name: "Large", price: 1.5 },
-        ],
-        milk: [
-          { id: "whole", name: "Whole Milk", price: 0 },
-          { id: "skim", name: "Skim Milk", price: 0 },
-          { id: "almond", name: "Almond Milk", price: 0.75 },
-          { id: "oat", name: "Oat Milk", price: 0.75 },
-        ],
-        flavor: [
-          { id: "none", name: "None", price: 0 },
-          { id: "vanilla", name: "Vanilla", price: 0.5 },
-          { id: "caramel", name: "Caramel", price: 0.5 },
-          { id: "hazelnut", name: "Hazelnut", price: 0.5 },
-        ],
-      },
-    },
-    {
-      id: 10,
-      name: "Chai Latte",
-      description: "Spiced tea concentrate with steamed milk",
-      price: 4.95,
-      image: "/chai-latte.png",
-      category: "specialty",
-      options: {
-        size: [
-          { id: "small", name: "Small", price: 0 },
-          { id: "medium", name: "Medium", price: 0.75 },
-          { id: "large", name: "Large", price: 1.5 },
-        ],
-        milk: [
-          { id: "whole", name: "Whole Milk", price: 0 },
-          { id: "skim", name: "Skim Milk", price: 0 },
-          { id: "almond", name: "Almond Milk", price: 0.75 },
-          { id: "oat", name: "Oat Milk", price: 0.75 },
-        ],
-        extras: [{ id: "extra-spicy", name: "Extra Spicy", price: 0.5 }],
-      },
-    },
-    {
-      id: 11,
-      name: "Hot Chocolate",
-      description: "Rich chocolate with steamed milk and whipped cream",
-      price: 4.25,
-      image: "/hot-chocolate.png",
-      category: "specialty",
-      options: {
-        size: [
-          { id: "small", name: "Small", price: 0 },
-          { id: "medium", name: "Medium", price: 0.75 },
-          { id: "large", name: "Large", price: 1.5 },
-        ],
-        milk: [
-          { id: "whole", name: "Whole Milk", price: 0 },
-          { id: "skim", name: "Skim Milk", price: 0 },
-          { id: "almond", name: "Almond Milk", price: 0.75 },
-          { id: "oat", name: "Oat Milk", price: 0.75 },
-        ],
-        extras: [
-          { id: "extra-chocolate", name: "Extra Chocolate", price: 0.5 },
-          { id: "no-whip", name: "No Whipped Cream", price: 0 },
-        ],
-      },
-    },
-    {
-      id: 12,
-      name: "Iced Tea",
-      description: "Fresh brewed tea over ice",
-      price: 3.5,
-      image: "/iced-tea.png",
-      category: "cold-drinks",
-      options: {
-        size: [
-          { id: "small", name: "Small", price: 0 },
-          { id: "medium", name: "Medium", price: 0.75 },
-          { id: "large", name: "Large", price: 1.5 },
-        ],
-        type: [
-          { id: "black", name: "Black Tea", price: 0 },
-          { id: "green", name: "Green Tea", price: 0 },
-          { id: "herbal", name: "Herbal Tea", price: 0 },
-        ],
-        sweetener: [
-          { id: "none", name: "Unsweetened", price: 0 },
-          { id: "simple", name: "Simple Syrup", price: 0.25 },
-          { id: "honey", name: "Honey", price: 0.5 },
-        ],
-      },
-    },
-  ];
+  // const coffeeItems = [
+  //   {
+  //     id: 1,
+  //     name: "Espresso",
+  //     description: "Strong, concentrated coffee served in a small cup",
+  //     price: 3.5,
+  //     image: "/rich-espresso-pour.png",
+  //     category: "espresso-drinks",
+  //     options: {
+  //       size: [
+  //         { id: "single", name: "Single", price: 0 },
+  //         { id: "double", name: "Double", price: 1.5 },
+  //         { id: "triple", name: "Triple", price: 2.5 },
+  //       ],
+  //       extras: [
+  //         { id: "extra-hot", name: "Extra Hot", price: 0 },
+  //         { id: "ristretto", name: "Ristretto Style", price: 0 },
+  //       ],
+  //     },
+  //   },
+  // ];
 
   // Initialize selected options for an item
   const initializeSelectedOptions = (item) => {
@@ -779,7 +520,7 @@ export default function Order() {
                 <div className="mt-8 flex flex-col h-[calc(100vh-12rem)]">
                   <div className="flex-1 overflow-auto">
                     {cart.map((item) => {
-                      const coffeeItem = coffeeItems.find(
+                      const coffeeItem = menuItems.find(
                         (coffee) => coffee.id === item.id
                       );
                       const formattedOptions = formatSelectedOptions(
@@ -915,8 +656,8 @@ export default function Order() {
           {categories.map((category) => (
             <TabsContent key={category.id} value={category.id} className="mt-4">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {coffeeItems
-                  .filter((item) => item.category === category.id)
+                {menuItems
+                  .filter((item) => item.categoryId === category.id)
                   .map((item) => {
                     const itemQuantity = getItemQuantityInCart(item.id);
 
@@ -927,7 +668,7 @@ export default function Order() {
                       >
                         <div className="aspect-video bg-amber-100 flex items-center justify-center overflow-hidden relative">
                           <img
-                            src={item.image || "/placeholder.svg"}
+                            src={item.imageURL || "/placeholder.svg"}
                             alt={item.name}
                             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                           />
@@ -943,7 +684,7 @@ export default function Order() {
                               {item.name}
                             </h3>
                             <span className="font-bold text-amber-800 bg-amber-100 px-2 py-1 rounded-full text-sm">
-                              ${item.price.toFixed(2)}
+                              ${Number(item.price).toFixed(2)}
                             </span>
                           </div>
                           <p className="text-amber-700 text-sm mb-4">
@@ -1010,7 +751,7 @@ export default function Order() {
               <div className="mt-8 flex flex-col h-[calc(80vh-8rem)]">
                 <div className="flex-1 overflow-auto">
                   {cart.map((item) => {
-                    const coffeeItem = coffeeItems.find(
+                    const coffeeItem = menuItems.find(
                       (coffee) => coffee.id === item.id
                     );
                     const formattedOptions = formatSelectedOptions(
@@ -1129,7 +870,7 @@ export default function Order() {
                     {selectedItem.name}
                   </h3>
                   <p className="text-sm text-amber-600">
-                    ${selectedItem.price.toFixed(2)}
+                    ${Number(selectedItem.price).toFixed(2)}
                   </p>
                 </div>
               </div>
