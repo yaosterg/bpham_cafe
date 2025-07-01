@@ -5,19 +5,19 @@ const prisma = new PrismaClient();
 export async function POST(req) {
   try {
     const formData = await req.json();
-    formData.orders.completedAt = new Date();
-    formData.orders.status = "complete";
-    const newOrder = await prisma.orders.update({
+    const newOrder = await prisma.order.update({
       where: { id: formData.id },
       data: {
-        orders: formData.orders,
+        completedStatus: true,
       },
     });
-    console.log("this is completed order", newOrder);
+
+    const allNewOrders = await prisma.order.findMany();
     return new Response(
       JSON.stringify({
         message: "Order created successfully",
         order: newOrder,
+        allOrders: allNewOrders,
       })
     );
   } catch (error) {

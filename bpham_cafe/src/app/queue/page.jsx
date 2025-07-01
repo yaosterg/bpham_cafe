@@ -22,6 +22,8 @@ import {
   selectAllOrders,
   selectOrderItems,
   findAllOrders,
+  deleteOrder,
+  completeOrder,
 } from "@/store/reducers/orderSlice";
 
 // Mock data for orders
@@ -106,32 +108,34 @@ function OrderCard({ order, orderItems, onDelete, onComplete }) {
         </div>
 
         <div className="flex gap-2 pt-2">
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="destructive" size="sm" className="flex-1">
-                <Trash2 className="h-4 w-4 mr-2" />
-                Delete
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Delete Order</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Are you sure you want to delete order {order.id} for{" "}
-                  {order.name}? This action cannot be undone.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={() => onDelete(order.id)}
-                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                >
-                  Delete Order
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+          {!order.completedStatus && (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" size="sm" className="flex-1">
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete Order</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Are you sure you want to delete order {order.id} for{" "}
+                    {order.name}? This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() => onDelete(order.id)}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    Delete Order
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
 
           {!order.completedStatus && (
             <AlertDialog>
@@ -182,21 +186,15 @@ export default function OrderQueue() {
 
   const completedOrders = orders
     .filter((order) => order.completedStatus === true)
-    .sort((a, b) => a.created - b.created); // Oldest first (longest elapsed time)
+    .sort((a, b) => a.id - b.id); // Oldest first (longest elapsed time)
 
-  //   const handleDeleteOrder = (orderId) => {
-  //     setOrders(orders.filter((order) => order.id !== orderId));
-  //   };
+  const handleDeleteOrder = async (order) => {
+    await dispatch(deleteOrder(order));
+  };
 
-  //   const handleCompleteOrder = (orderId) => {
-  //     setOrders(
-  //       orders.map((order) =>
-  //         order.id === orderId
-  //           ? { ...order, completedStatus: "completed" }
-  //           : order
-  //       )
-  //     );
-  //   };
+  const handleCompleteOrder = async (order) => {
+    await dispatch(completeOrder(order));
+  };
 
   const currentOrders =
     activeTab === "processing" ? processingOrders : completedOrders;
@@ -283,8 +281,8 @@ export default function OrderQueue() {
                     orderItems={orderItems.filter(
                       (item) => item.orderId === order.id
                     )}
-                    // onDelete={handleDeleteOrder}
-                    // onComplete={handleCompleteOrder}
+                    onDelete={() => handleDeleteOrder(order)}
+                    onComplete={() => handleCompleteOrder(order)}
                   />
                 ))}
               </div>

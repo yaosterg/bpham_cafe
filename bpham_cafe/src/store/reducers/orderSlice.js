@@ -12,7 +12,7 @@ export const createOrder = createAsyncThunk(
 export const deleteOrder = createAsyncThunk(
   "orders/deleteOrder",
   async (order) => {
-    const { data } = await axios.post("api/deleteorder", order);
+    const { data } = await axios.post("api/orders/deleteorder", order);
     return data;
   }
 );
@@ -25,7 +25,7 @@ export const findAllOrders = createAsyncThunk("orders/allorders", async () => {
 export const completeOrder = createAsyncThunk(
   "orders/completeOrder",
   async (order) => {
-    const { data } = await axios.post("api/completeorder", order);
+    const { data } = await axios.post("api/orders/completeorder", order);
     return data;
   }
 );
@@ -51,17 +51,12 @@ export const orderSlice = createSlice({
       .addCase(completeOrder.fulfilled, (state, action) => {
         let completedOrder = action.payload.order;
         state.completedOrder = completedOrder;
-        const updateOrders = state.allOrders.map((order) =>
-          order.id === completedOrder.id ? (order = completedOrder) : order
-        );
-        state.allOrders = updateOrders;
+        state.allOrders = action.payload.allOrders;
       })
       .addCase(deleteOrder.fulfilled, (state, action) => {
-        let deletedOrder = action.payload.order;
-        state.deletedOrder = deletedOrder;
-        state.allOrders = state.allOrders.filter(
-          (order) => order.id !== deletedOrder.id
-        );
+        state.allOrders = action.payload.order;
+        state.orderItems = action.payload.orderItems;
+        state.deletedOrder = action.payload.order;
       });
   },
 });
