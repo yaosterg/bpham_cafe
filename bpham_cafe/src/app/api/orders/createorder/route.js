@@ -17,6 +17,7 @@ export async function POST(req) {
             quantity: item.quantity,
             selectedOptions: item.selectedOptions,
             totalPrice: item.totalPrice,
+            categoryId: item.categoryId, // Assuming categoryId is passed in the item
           })),
         },
       },

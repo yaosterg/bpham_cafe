@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Clock, Trash2, CheckCircle, Coffee, User } from "lucide-react";
+import { Clock, Trash2, CheckCircle, Coffee, User, Cake } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -25,6 +25,10 @@ import {
   deleteOrder,
   completeOrder,
 } from "@/store/reducers/orderSlice";
+import {
+  findAllCategories,
+  selectAllCategories,
+} from "@/store/reducers/categorySlice";
 
 // Mock data for orders
 
@@ -42,7 +46,7 @@ function formatElapsedTime(created) {
   return `${hours}h ${minutes}m ago`;
 }
 
-function OrderCard({ order, orderItems, onDelete, onComplete }) {
+function OrderCard({ order, drinks, bakery, onDelete, onComplete }) {
   const [elapsedTime, setElapsedTime] = useState(
     formatElapsedTime(order.created)
   );
@@ -79,13 +83,51 @@ function OrderCard({ order, orderItems, onDelete, onComplete }) {
 
       <CardContent className="pt-0">
         <div className="mb-4">
-          {orderItems.map((item, index) => (
+          {drinks.length > 0 && (
+            <h4 className="font-semibold text-sm text-foreground mb-2 uppercase tracking-wide border-b border-muted pb-1">
+              Beverages
+            </h4>
+          )}
+          {drinks.map((item, index) => (
             <div
               key={index}
               className="py-2 border-b border-muted/50 last:border-b-0"
             >
               <div className="flex items-center gap-2 mb-1">
                 <Coffee className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                <Badge variant="secondary" className="text-xs">
+                  x{item.quantity}
+                </Badge>
+                <span className="font-medium">{item.name}</span>
+              </div>
+              {item.selectedOptions &&
+                Object.entries(item.selectedOptions).map(([key, value]) => (
+                  <p key={key} className="text-sm text-muted-foreground ml-5">
+                    {key[0].toUpperCase() + key.slice(1)}:{" "}
+                    {value[0].toUpperCase() + value.slice(1)}
+                  </p>
+                ))}
+              {item.notes && (
+                <p className="text-sm text-blue-500 ml-5">
+                  Notes: {item.notes}
+                </p>
+              )}
+            </div>
+          ))}
+        </div>
+        <div className="mb-4">
+          {bakery.length > 0 && (
+            <h4 className="font-semibold text-sm text-foreground mb-2 uppercase tracking-wide border-b border-muted pb-1">
+              Bakery
+            </h4>
+          )}
+          {bakery.map((item, index) => (
+            <div
+              key={index}
+              className="py-2 border-b border-muted/50 last:border-b-0"
+            >
+              <div className="flex items-center gap-2 mb-1">
+                <Cake className="h-3 w-3 text-muted-foreground flex-shrink-0" />
                 <Badge variant="secondary" className="text-xs">
                   x{item.quantity}
                 </Badge>
@@ -177,12 +219,14 @@ function OrderCard({ order, orderItems, onDelete, onComplete }) {
 export default function OrderQueue() {
   const orders = useSelector(selectAllOrders);
   const orderItems = useSelector(selectOrderItems);
+  const categories = useSelector(selectAllCategories);
   const [activeTab, setActiveTab] = useState("processing");
   const dispatch = useDispatch();
 
   useEffect(() => {
     const fetchOrders = async () => {
       await dispatch(findAllOrders());
+      await dispatch(findAllCategories());
     };
     fetchOrders();
   }, []);
@@ -285,9 +329,10 @@ export default function OrderQueue() {
                   <OrderCard
                     key={order.id}
                     order={order}
-                    orderItems={orderItems.filter(
-                      (item) => item.orderId === order.id
-                    )}
+                    drinks={orderItems
+                      .filter((item) => item.orderId === order.id)
+                      .filter((item) => item.categoryId !== 25)}
+                    bakery={orderItems.filter((item) => item.categoryId === 25)}
                     onDelete={() => handleDeleteOrder(order)}
                     onComplete={() => handleCompleteOrder(order)}
                   />

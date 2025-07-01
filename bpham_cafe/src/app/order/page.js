@@ -156,6 +156,7 @@ export default function Order() {
             selectedOptions,
             imageURL: item.imageURL,
             notes: item.notes,
+            categoryId: item.categoryId,
           },
         ];
       }

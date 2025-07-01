@@ -13,6 +13,7 @@ model Category {
   id        Int      @id @default(autoincrement())
   category String
    items    Item[]
+   orderItems   OrderItem[]
 }
 
 model Ingredient {
@@ -65,4 +66,6 @@ model OrderItem {
   quantity      Int
   selectedOptions Json
   totalPrice  Float
+  categoryId   Int              // Foreign key
+  category     Category         @relation(fields: [categoryId], references: [id])
 }
