@@ -300,10 +300,12 @@ export default function BrianCoffee() {
             whileHover={{ scale: 1.05 }}
             transition={{ type: "spring", stiffness: 400, damping: 10 }}
           >
-            <Coffee className="h-5 w-5 text-[#A67C52]" />
-            <span className="text-lg text-[#A67C52] tracking-tight font-medium">
-              Brian Coffee
-            </span>
+            <Link href="/dashboard">
+              {" "}
+              <span className="text-lg text-[#A67C52] tracking-tight font-medium">
+                BP.HAM Cafe
+              </span>
+            </Link>
           </motion.div>
 
           <nav className="hidden md:flex items-center space-x-8">
@@ -375,9 +377,11 @@ export default function BrianCoffee() {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  <Button className="bg-[#A67C52] hover:bg-[#8A6642] text-white rounded-full px-6 h-10 shadow-md">
-                    View Menu
-                  </Button>
+                  <Link href="/order">
+                    <Button className="bg-[#A67C52] hover:bg-[#8A6642] text-white rounded-full px-6 h-10 shadow-md">
+                      Order!
+                    </Button>
+                  </Link>
                 </motion.div>
               </motion.div>
             </motion.div>
