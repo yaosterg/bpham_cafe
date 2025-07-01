@@ -130,7 +130,7 @@ function OrderCard({ order, drinks, bakery, onDelete, onComplete }) {
               <div className="flex items-center gap-2 mb-1">
                 <Cake className="h-3 w-3 text-muted-foreground flex-shrink-0" />
                 <Badge variant="secondary" className="text-xs">
-                  x{item.quantity}
+                  {item.quantity}x
                 </Badge>
                 <span className="font-medium">{item.name}</span>
               </div>
