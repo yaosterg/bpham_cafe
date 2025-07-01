@@ -640,6 +640,31 @@ export default function CategoryItems({
                   {/* Options Section */}
                   <div className="p-4 bg-white rounded-xl border border-[#d1c5b5] shadow-sm">
                     <ToggleSwitch
+                      checked={"temp" in (formData.options ?? {})}
+                      onChange={() => {
+                        setFormData((prev) => {
+                          if ("temp" in prev.options) {
+                            const { temp, ...rest } = prev.options;
+                            return { ...prev, options: rest };
+                          } else {
+                            return {
+                              ...prev,
+                              options: {
+                                ...prev.options,
+                                temp: [
+                                  { id: "hot", name: "Hot" },
+                                  { id: "cold", name: "Cold" },
+                                ],
+                              },
+                            };
+                          }
+                        });
+                      }}
+                      label="Tempature Options (Hot/Cold):"
+                    />
+                  </div>
+                  <div className="p-4 bg-white rounded-xl border border-[#d1c5b5] shadow-sm">
+                    <ToggleSwitch
                       checked={"milk" in (formData.options ?? {})}
                       onChange={() => {
                         setFormData((prev) => {
@@ -665,31 +690,6 @@ export default function CategoryItems({
                         });
                       }}
                       label="Milk Options (Regular/Lactaid/Oat/Almond):"
-                    />
-                  </div>
-                  <div className="p-4 bg-white rounded-xl border border-[#d1c5b5] shadow-sm">
-                    <ToggleSwitch
-                      checked={"temp" in (formData.options ?? {})}
-                      onChange={() => {
-                        setFormData((prev) => {
-                          if ("temp" in prev.options) {
-                            const { temp, ...rest } = prev.options;
-                            return { ...prev, options: rest };
-                          } else {
-                            return {
-                              ...prev,
-                              options: {
-                                ...prev.options,
-                                temp: [
-                                  { id: "hot", name: "Hot" },
-                                  { id: "cold", name: "Cold" },
-                                ],
-                              },
-                            };
-                          }
-                        });
-                      }}
-                      label="Tempature Options (Hot/Cold):"
                     />
                   </div>
 
