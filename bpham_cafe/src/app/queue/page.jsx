@@ -50,7 +50,16 @@ function OrderCard({ order, drinks, bakery, onDelete, onComplete }) {
   const [elapsedTime, setElapsedTime] = useState(
     formatElapsedTime(order.created)
   );
-
+  const [checkedItems, setCheckedItems] = useState({ bakery: {}, drinks: {} });
+  function handleToggle(category, key) {
+    setCheckedItems((prev) => ({
+      ...prev,
+      [category]: {
+        ...prev[category],
+        [key]: !prev[category][key],
+      },
+    }));
+  }
   useEffect(() => {
     const interval = setInterval(() => {
       setElapsedTime(formatElapsedTime(order.created));
@@ -88,72 +97,116 @@ function OrderCard({ order, drinks, bakery, onDelete, onComplete }) {
               Beverages
             </h4>
           )}
-          {drinks.map((item, index) => (
-            <div
-              key={index}
-              className="py-2 border-b border-muted/50 last:border-b-0"
-            >
-              <div className="flex items-center gap-2 mb-1">
-                <Coffee className="h-3 w-3 text-muted-foreground flex-shrink-0" />
-                <Badge variant="secondary" className="text-xs">
-                  {item.quantity}x
-                </Badge>
-                <span className="font-medium">{item.name}</span>
+          {drinks.map((item, index) => {
+            const isChecked = checkedItems.drinks[item.id] ?? false;
+            return (
+              <div
+                key={index}
+                className={`py-2 border-b border-muted/30 last:border-b-0 ml-2 ${
+                  isChecked ? "opacity-60" : ""
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    {" "}
+                    <div className="flex items-center gap-2 mb-1">
+                      <Coffee className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                      <Badge variant="secondary" className="text-xs">
+                        {item.quantity}x
+                      </Badge>
+                      <span className="font-medium">{item.name}</span>
+                    </div>
+                    {item.selectedOptions &&
+                      Object.entries(item.selectedOptions).map(
+                        ([key, value]) => (
+                          <p
+                            key={key}
+                            className="text-sm text-muted-foreground ml-5"
+                          >
+                            {key[0].toUpperCase() + key.slice(1)}:{" "}
+                            {value[0].toUpperCase() + value.slice(1)}
+                          </p>
+                        )
+                      )}
+                    {item.notes && (
+                      <p className="text-sm text-blue-500 ml-5">
+                        Notes: {item.notes}
+                      </p>
+                    )}
+                  </div>
+                  <div className="ml-4">
+                    <input
+                      type="checkbox"
+                      checked={isChecked}
+                      onChange={() => handleToggle("drinks", item.id)}
+                      className="w-4 h-4 text-primary bg-background border-2 border-muted-foreground rounded focus:ring-primary focus:ring-2"
+                    />
+                  </div>
+                </div>
               </div>
-              {item.selectedOptions &&
-                Object.entries(item.selectedOptions).map(([key, value]) => (
-                  <p key={key} className="text-sm text-muted-foreground ml-5">
-                    {key[0].toUpperCase() + key.slice(1)}:{" "}
-                    {value[0].toUpperCase() + value.slice(1)}
-                  </p>
-                ))}
-              {item.notes && (
-                <p className="text-sm text-blue-500 ml-5">
-                  Notes: {item.notes}
-                </p>
-              )}
-            </div>
-          ))}
+            );
+          })}
         </div>
         <div className="mb-4">
-          {/* {bakery.length > 0 && (
+          {bakery.length > 0 && (
             <h4 className="font-semibold text-sm text-foreground mb-2 uppercase tracking-wide border-b border-muted pb-1">
               Bakery
             </h4>
-          )} */}
-          {console.log("Bakery items:", bakery, "Order", order)}
-          {bakery.map((item, index) => (
-            <div
-              key={index}
-              className="py-2 border-b border-muted/50 last:border-b-0"
-            >
-              <div className="flex items-center gap-2 mb-1">
-                <Cake className="h-3 w-3 text-muted-foreground flex-shrink-0" />
-                <Badge variant="secondary" className="text-xs">
-                  {item.quantity}x
-                </Badge>
-                <span className="font-medium">{item.name}</span>
+          )}
+          {bakery.map((item, index) => {
+            const isChecked = checkedItems.bakery[item.id] ?? false;
+            return (
+              <div
+                key={index}
+                className={`py-2 border-b border-muted/30 last:border-b-0 ml-2 ${
+                  isChecked ? "opacity-60" : ""
+                }`}
+              >
+                {" "}
+                <div className="flex items-center justify-between">
+                  <div>
+                    {" "}
+                    <div className="flex items-center gap-2 mb-1">
+                      <Cake className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                      <Badge variant="secondary" className="text-xs">
+                        {item.quantity}x
+                      </Badge>
+                      <span className="font-medium">{item.name}</span>
+                    </div>
+                    {item.selectedOptions &&
+                      Object.entries(item.selectedOptions)
+                        .sort(([a], [b]) => {
+                          if (a === "temp") return -1;
+                          if (b === "temp") return 1;
+                          return 0;
+                        })
+                        .map(([key, value]) => (
+                          <p
+                            key={key}
+                            className="text-sm text-muted-foreground ml-5"
+                          >
+                            {key[0].toUpperCase() + key.slice(1)}:{" "}
+                            {value[0].toUpperCase() + value.slice(1)}
+                          </p>
+                        ))}
+                    {item.notes && (
+                      <p className="text-sm text-blue-500 ml-5">
+                        Notes: {item.notes}
+                      </p>
+                    )}
+                  </div>
+                  <div className="ml-4">
+                    <input
+                      type="checkbox"
+                      checked={isChecked}
+                      onChange={() => handleToggle("bakery", item.id)}
+                      className="w-4 h-4 text-primary bg-background border-2 border-muted-foreground rounded focus:ring-primary focus:ring-2"
+                    />
+                  </div>
+                </div>
               </div>
-              {item.selectedOptions &&
-                Object.entries(item.selectedOptions)
-                  .sort(([a], [b]) => {
-                    if (a === "temp") return -1;
-                    if (b === "temp") return 1;
-                    return 0;
-                  })
-                  .map(([key, value]) => (
-                    <p key={key} className="text-sm text-muted-foreground ml-5">
-                      {key[0].toUpperCase() + key.slice(1)}:{" "}
-                      {value[0].toUpperCase() + value.slice(1)}
-                    </p>
-                  ))}
-              {item.notes && (
-                <p className="text-sm text-blue-500 ml-5">
-                  Notes: {item.notes}
-                </p>
-              )}
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         <div className="flex gap-2 pt-2">
