@@ -47,7 +47,22 @@ model ItemIngredient {
   @@id([itemId, ingredientId]) // Composite primary key
 }
 
-model Orders{
-  id Int @id @default(autoincrement())
-  orders Json
+model Order {
+  id              Int         @id @default(autoincrement())
+  name            String
+  created         DateTime    @default(now())
+  completed       DateTime?
+  completedStatus Boolean     @default(false)
+  orderItems      OrderItem[] // 1-to-many relationship
+}
+
+model OrderItem {
+  id        Int     @id @default(autoincrement())
+  order     Order  @relation(fields: [orderId], references: [id])
+  orderId   Int
+  name      String
+  notes     String
+  quantity      Int
+  selectedOptions Json
+  totalPrice  Float
 }

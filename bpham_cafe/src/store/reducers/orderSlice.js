@@ -4,7 +4,7 @@ import axios from "axios";
 export const createOrder = createAsyncThunk(
   "orders/createOrder",
   async (orders) => {
-    const { data } = await axios.post("api/createorder", orders);
+    const { data } = await axios.post("api/orders/createorder", orders);
     return data;
   }
 );
@@ -18,7 +18,7 @@ export const deleteOrder = createAsyncThunk(
 );
 
 export const findAllOrders = createAsyncThunk("orders/allorders", async () => {
-  const { data } = await axios.get("api/allorders");
+  const { data } = await axios.get("api/orders/allorders");
   return data;
 });
 
@@ -34,6 +34,7 @@ export const orderSlice = createSlice({
   name: "orders",
   initialState: {
     allOrders: [],
+    orderItems: [],
     completedOrder: {},
     deletedOrder: {},
   },
@@ -45,6 +46,7 @@ export const orderSlice = createSlice({
       })
       .addCase(findAllOrders.fulfilled, (state, action) => {
         state.allOrders = action.payload.order;
+        state.orderItems = action.payload.orderItems;
       })
       .addCase(completeOrder.fulfilled, (state, action) => {
         let completedOrder = action.payload.order;
@@ -65,4 +67,5 @@ export const orderSlice = createSlice({
 });
 
 export const selectAllOrders = (state) => state.orders.allOrders;
+export const selectOrderItems = (state) => state.orders.orderItems;
 export default orderSlice.reducer;

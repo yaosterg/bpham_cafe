@@ -35,6 +35,7 @@ import {
 } from "@/store/reducers/categorySlice";
 import { selectAllMenuItems, findAllItems } from "@/store/reducers/itemSlice";
 import Image from "next/image";
+import { createOrder } from "@/store/reducers/orderSlice";
 
 export default function Order() {
   const dispatch = useDispatch();
@@ -59,8 +60,13 @@ export default function Order() {
   }, []);
 
   // Process checkout
-  const processCheckout = () => {
+  const processCheckout = async () => {
     setCheckoutState("processing");
+    let orderDetails = {
+      name: customerName,
+      items: cart,
+    };
+    await dispatch(createOrder(orderDetails));
 
     // Simulate processing time
     setTimeout(() => {
