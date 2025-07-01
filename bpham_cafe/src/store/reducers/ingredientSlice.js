@@ -63,7 +63,6 @@ export const ingredientSlice = createSlice({
   },
   reducers: {
     setEditedIngredient: (state, action) => {
-      console.log("setEditedIngredient", action.payload);
       state.editedIngredient = action.payload;
     },
   },
@@ -79,7 +78,6 @@ export const ingredientSlice = createSlice({
         );
       })
       .addCase(batchCreateIngredients.fulfilled, (state, action) => {
-        console.log("Batch create ingredients:", action.payload);
         state.allIngredients = action.payload.ingredients;
       })
       .addCase(deleteIngredient.fulfilled, (state, action) => {

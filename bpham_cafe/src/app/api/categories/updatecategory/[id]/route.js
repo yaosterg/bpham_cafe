@@ -6,7 +6,6 @@ const prisma = new PrismaClient();
 export async function PUT(request, { params }) {
   const id = await params;
   const body = await request.json();
-  console.log(id, body);
 
   try {
     const updatedCategory = await prisma.category.update({

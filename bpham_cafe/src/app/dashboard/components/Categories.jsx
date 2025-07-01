@@ -76,7 +76,7 @@ export default function CategoriesManager() {
 
   const handleAddCategory = async () => {
     if (newCategoryName.trim() === "") return;
-    console.log("Adding category:", newCategoryName);
+
     await dispatch(createCategory({ newCategory: newCategoryName }));
     setNewCategoryName("");
     setIsDialogOpen(false);
@@ -100,7 +100,6 @@ export default function CategoriesManager() {
   const handleCategoryClick = async (categoryId) => {
     setSelectedCategory(categoryId);
     await dispatch(findItemById(categoryId));
-    console.log("Menu Items by ID:", menuItemsById);
   };
 
   return (

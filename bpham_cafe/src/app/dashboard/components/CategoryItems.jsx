@@ -166,7 +166,6 @@ export default function CategoryItems({
       price: formData.cost === "" ? 0 : Number(formData.cost),
       categoryId: selectedCategory,
     };
-    console.log("this is savedData", formattedData, formData);
 
     if (!currentItem) {
       // Add new item

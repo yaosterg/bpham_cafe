@@ -29,6 +29,7 @@ import {
   findAllCategories,
   selectAllCategories,
 } from "@/store/reducers/categorySlice";
+import { createClient } from "@supabase/supabase-js";
 
 // Mock data for orders
 
@@ -36,7 +37,6 @@ function formatElapsedTime(created) {
   const now = new Date();
   const createdTime = new Date(created);
   const diffInMinutes = Math.floor((now - createdTime) / (1000 * 60));
-  console.log(diffInMinutes);
 
   if (diffInMinutes < 1) return "Just now";
   if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
@@ -222,12 +222,44 @@ function OrderCard({ order, drinks, bakery, onDelete, onComplete }) {
   );
 }
 
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+);
+
+function useOrderRealtime() {
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    const channel = supabase
+      .channel("Order-realtime")
+      .on(
+        "postgres_changes",
+        {
+          event: "*", // listen for INSERT, UPDATE, DELETE
+          schema: "public",
+          table: "Order", // usually lowercase, adjust if needed
+        },
+        (payload) => {
+          console.log("Order change received:", payload);
+          dispatch(findAllOrders()); // refetch orders to update UI
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [dispatch]);
+}
+
 export default function OrderQueue() {
   const orders = useSelector(selectAllOrders);
   const orderItems = useSelector(selectOrderItems);
   const categories = useSelector(selectAllCategories);
   const [activeTab, setActiveTab] = useState("processing");
   const dispatch = useDispatch();
+  useOrderRealtime();
 
   useEffect(() => {
     const fetchOrders = async () => {

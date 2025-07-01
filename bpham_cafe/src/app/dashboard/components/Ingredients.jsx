@@ -250,7 +250,7 @@ export default function Ingredients() {
     }
     // In a real application, you would send the file to the backend here
     // For demo purposes, we'll just show a success message
-    console.log("Uploading file:", uploadFile.name);
+
     setLoading(true);
     await dispatch(batchCreateIngredients(uploadFile));
     setLoading(false);

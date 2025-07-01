@@ -65,8 +65,6 @@ export async function POST(req) {
         });
     });
 
-    console.log("CSV file parsed:", results);
-
     const newIngredients = [];
 
     for (let row of results) {

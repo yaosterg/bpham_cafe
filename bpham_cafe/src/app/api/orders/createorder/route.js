@@ -5,7 +5,6 @@ const prisma = new PrismaClient();
 export async function POST(req) {
   try {
     const formData = await req.json();
-    console.log("Received order data:", formData);
 
     const newOrder = await prisma.order.create({
       data: {
@@ -26,7 +25,6 @@ export async function POST(req) {
       },
     });
 
-    console.log("New order created:", newOrder);
     return new Response(
       JSON.stringify({
         message: "Order created successfully",

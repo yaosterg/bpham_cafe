@@ -5,12 +5,10 @@ const prisma = new PrismaClient();
 export async function POST(req) {
   try {
     const formData = await req.json();
-    console.log("Form Data:", formData);
+
     const deletedCategory = await prisma.category.delete({
       where: { id: formData.id },
     });
-
-    console.log("Deleted Category:", deletedCategory);
 
     return new Response(
       JSON.stringify({
