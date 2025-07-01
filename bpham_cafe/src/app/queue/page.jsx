@@ -86,15 +86,15 @@ function OrderCard({ order, orderItems, onDelete, onComplete }) {
             >
               <div className="flex items-center gap-2 mb-1">
                 <Coffee className="h-3 w-3 text-muted-foreground flex-shrink-0" />
-                <span className="font-medium">{item.name}</span>
                 <Badge variant="secondary" className="text-xs">
                   x{item.quantity}
                 </Badge>
+                <span className="font-medium">{item.name}</span>
               </div>
               {item.selectedOptions &&
                 Object.entries(item.selectedOptions).map(([key, value]) => (
                   <p key={key} className="text-sm text-muted-foreground ml-5">
-                    Options: {key[0].toUpperCase() + key.slice(1)}:{" "}
+                    {key[0].toUpperCase() + key.slice(1)}:{" "}
                     {value[0].toUpperCase() + value.slice(1)}
                   </p>
                 ))}
@@ -140,7 +140,11 @@ function OrderCard({ order, orderItems, onDelete, onComplete }) {
           {!order.completedStatus && (
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button size="sm" className="flex-1">
+                <Button
+                  size="sm"
+                  className="flex-1 "
+                  style={{ backgroundColor: "oklch(64.8% 0.2 131.684)" }}
+                >
                   <CheckCircle className="h-4 w-4 mr-2" />
                   Complete
                 </Button>
@@ -154,7 +158,10 @@ function OrderCard({ order, orderItems, onDelete, onComplete }) {
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={() => onComplete(order.id)}>
+                  <AlertDialogAction
+                    style={{ backgroundColor: "oklch(64.8% 0.2 131.684)" }}
+                    onClick={() => onComplete(order.id)}
+                  >
                     Complete Order
                   </AlertDialogAction>
                 </AlertDialogFooter>
