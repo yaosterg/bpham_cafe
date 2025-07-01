@@ -30,7 +30,6 @@ export default function CategoryItems({
     options: {},
   });
   const dispatch = useDispatch();
-  const [menuIngredients, setMenuIngredients] = useState([]);
   const menuItems = useSelector(selectMenuItemsById);
 
   // Calculate ingredient cost
@@ -71,7 +70,7 @@ export default function CategoryItems({
       description: item.description,
       cost: item.price,
       ingredients: [...ingList],
-      status: item.status,
+      status: item.menuStatus,
       imageURL: item.imageURL || "",
       options: item.options || {},
     });
@@ -161,21 +160,22 @@ export default function CategoryItems({
 
   // Save menu item
   const saveMenuItem = async () => {
-    const formattedData = {
-      ...formData,
-      price: formData.cost === "" ? 0 : Number(formData.cost),
-      categoryId: selectedCategory,
-    };
-
     if (!currentItem) {
       // Add new item
+      const formattedData = {
+        ...formData,
+        price: formData.cost === "" ? 0 : Number(formData.cost),
+        categoryId: selectedCategory,
+      };
       await dispatch(createMenuItem(formattedData));
     } else {
-      // // Update existing item
-      // const updatedItems = menuItems.map((item) =>
-      //   item.id === currentItem.id ? { ...item, ...formattedData } : item
-      // );
-      // setMenuItems(updatedItems);
+      const formattedData = {
+        ...formData,
+        price: formData.cost === "" ? 0 : Number(formData.cost),
+        categoryId: selectedCategory,
+        id: currentItem.id,
+      };
+      console.log("this is formattedData", formattedData);
       await dispatch(updateMenuItem(formattedData));
     }
     setIsEditDialogOpen(false);

@@ -5,6 +5,7 @@ const prisma = new PrismaClient();
 export async function POST(req) {
   try {
     const formData = await req.json();
+    console.log("Received form data:", formData);
 
     const newMenuItem = await prisma.item.create({
       data: {
@@ -23,6 +24,7 @@ export async function POST(req) {
         },
       },
     });
+    console.log("New menu item created:", newMenuItem);
 
     return new Response(
       JSON.stringify({

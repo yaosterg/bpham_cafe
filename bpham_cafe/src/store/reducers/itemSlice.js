@@ -48,7 +48,7 @@ export const itemSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(createMenuItem.fulfilled, (state, action) => {
-        state.menuItemsById.push(action.payload.items);
+        state.menuItemsById.push(action.payload.item);
         state.menuItemsById = state.menuItemsById.sort((a, b) =>
           a.name.localeCompare(b.name)
         );

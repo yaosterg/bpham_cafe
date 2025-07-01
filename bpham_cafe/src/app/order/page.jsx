@@ -618,6 +618,7 @@ export default function Order() {
                   .filter((item) => item.categoryId === category.id)
                   .map((item) => {
                     const itemQuantity = getItemQuantityInCart(item.id);
+                    if (!item.menuStatus) return null;
                     return (
                       <Card
                         key={item.id}
