@@ -82,7 +82,7 @@ function OrderCard({ order, drinks, bakery, onDelete, onComplete }) {
         </div>
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Clock className="h-3 w-3" />
-          {/* <span>Created: {order.created.toLocaleTimeString()}</span> */}
+          <span>Created: {new Date(order.created).toLocaleTimeString()}</span>
           <Separator orientation="vertical" className="h-3" />
           <span className="text-red-500 font-medium">
             Elapsed: {elapsedTime}
@@ -296,7 +296,6 @@ function useOrderRealtime() {
         },
         (payload) => {
           console.log("Order change received:", payload);
-
           dispatch(findAllOrders()); // refetch orders to update UI
         }
       )

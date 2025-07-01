@@ -639,18 +639,18 @@ export default function CategoryItems({
                   {/* Options Section */}
                   <div className="p-4 bg-white rounded-xl border border-[#d1c5b5] shadow-sm">
                     <ToggleSwitch
-                      checked={"temp" in (formData.options ?? {})}
+                      checked={"Temperature" in (formData.options ?? {})}
                       onChange={() => {
                         setFormData((prev) => {
-                          if ("temp" in prev.options) {
-                            const { temp, ...rest } = prev.options;
+                          if ("Temperature" in prev.options) {
+                            const { Temperature, ...rest } = prev.options;
                             return { ...prev, options: rest };
                           } else {
                             return {
                               ...prev,
                               options: {
                                 ...prev.options,
-                                temp: [
+                                Temperature: [
                                   { id: "hot", name: "Hot" },
                                   { id: "cold", name: "Cold" },
                                 ],
@@ -664,20 +664,20 @@ export default function CategoryItems({
                   </div>
                   <div className="p-4 bg-white rounded-xl border border-[#d1c5b5] shadow-sm">
                     <ToggleSwitch
-                      checked={"milk" in (formData.options ?? {})}
+                      checked={"Milk" in (formData.options ?? {})}
                       onChange={() => {
                         setFormData((prev) => {
-                          if ("milk" in prev.options) {
-                            // Remove 'milk' key
-                            const { milk, ...rest } = prev.options;
+                          if ("Milk" in prev.options) {
+                            // Remove 'Milk' key
+                            const { Milk, ...rest } = prev.options;
                             return { ...prev, options: rest };
                           } else {
-                            // Add 'milk' key with fixed object
+                            // Add 'Milk' key with fixed object
                             return {
                               ...prev,
                               options: {
                                 ...prev.options,
-                                milk: [
+                                Milk: [
                                   { id: "regular", name: "Regular" },
                                   { id: "lactaid", name: "Lactaid" },
                                   { id: "oat", name: "Oat" },

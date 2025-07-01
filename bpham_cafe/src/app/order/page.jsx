@@ -36,6 +36,22 @@ import {
 import { selectAllMenuItems, findAllItems } from "@/store/reducers/itemSlice";
 import Image from "next/image";
 import { createOrder } from "@/store/reducers/orderSlice";
+import Link from "next/link";
+
+const customStyles = `
+  .line-clamp-1 {
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+`;
 
 export default function Order() {
   const dispatch = useDispatch();
@@ -46,6 +62,7 @@ export default function Order() {
   const [checkoutState, setCheckoutState] = useState("browsing"); // browsing, processing, success
   const [customerName, setCustomerName] = useState("");
   const [nameEntered, setNameEntered] = useState(false);
+
   const categories = useSelector(selectAllCategories);
   const menuItems = useSelector(selectAllMenuItems);
 
@@ -62,12 +79,11 @@ export default function Order() {
   // Process checkout
   const processCheckout = async () => {
     setCheckoutState("processing");
-    let orderDetails = {
+    const orderDetails = {
       name: customerName,
       items: cart,
     };
     await dispatch(createOrder(orderDetails));
-
     // Simulate processing time
     setTimeout(() => {
       setCheckoutState("success");
@@ -98,22 +114,6 @@ export default function Order() {
     });
   };
 
-  // Calculate additional price from options
-  // const calculateOptionsPrice = (item, selectedOptions) => {
-  //   let additionalPrice = 0;
-
-  //   for (const [category, optionId] of Object.entries(selectedOptions)) {
-  //     if (category === "extras" || category === "notes") continue; // Handle extras separately
-
-  //     const option = item.options[category]?.find((opt) => opt.id === optionId);
-  //     if (option) {
-  //       additionalPrice += option.price;
-  //     }
-  //   }
-
-  //   return additionalPrice;
-  // };
-
   // Get option name by ID
   const getOptionNameById = (item, category, optionId) => {
     if (!item.options[category]) return "";
@@ -124,7 +124,6 @@ export default function Order() {
   // Add item to cart with selected options
   const addToCart = (item, selectedOptions) => {
     const totalPrice = Number(item.price);
-
     // Create a unique ID based on the item and its options
     const optionsString = JSON.stringify(selectedOptions);
     const uniqueId = `${item.id}-${optionsString}`;
@@ -161,7 +160,6 @@ export default function Order() {
         ];
       }
     });
-
     // Close the customization modal
     setSelectedItem(null);
   };
@@ -217,12 +215,10 @@ export default function Order() {
   // Format options for display
   const formatSelectedOptions = (item, coffeeItem) => {
     if (!coffeeItem) return [];
-
     const formattedOptions = [];
 
     for (const [category, optionId] of Object.entries(item.selectedOptions)) {
       if (category === "extras" || category === "notes") continue; // Handle extras and notes separately
-
       const option = coffeeItem.options[category]?.find(
         (opt) => opt.id === optionId
       );
@@ -251,14 +247,13 @@ export default function Order() {
             <div className="bg-amber-100 p-4 rounded-full mb-4">
               <Coffee className="h-12 w-12 text-amber-800" />
             </div>
-            <h1 className="text-2xl font-bold text-amber-900 text-center">
-              Welcome to Brian Coffee
+            <h1 className="font-bold text-3xl text-amber-900 text-center">
+              Welcome to BP.HAM Popup#2
             </h1>
-            <p className="text-amber-700 mt-2 text-center">
-              Please enter your name to continue
+            <p className="text-amber-700 mt-5 text-center">
+              Please remember to fill out your surveries.
             </p>
           </div>
-
           <form onSubmit={handleNameSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="name" className="text-amber-800">
@@ -271,7 +266,7 @@ export default function Order() {
                 <Input
                   id="name"
                   type="text"
-                  placeholder="Enter your name"
+                  placeholder="Enter name to proceed"
                   value={customerName}
                   onChange={(e) => setCustomerName(e.target.value)}
                   className="pl-10 border-amber-300 focus:border-amber-500 focus:ring-amber-500"
@@ -390,6 +385,7 @@ export default function Order() {
       </div>
     );
   }
+
   const allOptionsSelected =
     selectedItem &&
     selectedItem.options &&
@@ -404,19 +400,29 @@ export default function Order() {
 
   return (
     <div className="min-h-screen bg-amber-50 pb-20 font-sans">
+      <style jsx>{customStyles}</style>
+      {/* Rest of the component */}
       {/* Header */}
       <header className="sticky top-0 z-10 bg-amber-800 text-white p-4 shadow-md">
         <div className="container mx-auto flex justify-between items-center">
           <div className="flex items-center gap-2">
             <div className="bg-white p-2 rounded-full">
-              <Coffee className="h-6 w-6 text-amber-800" />
+              <Link href="https://www.instagram.com/bp.hamlife/">
+                {" "}
+                <div className="relative group inline-block">
+                  <Coffee className="text-foreground" />
+                  <span className="absolute top-full left-1/2 mt-2 w-max -translate-x-1/2 rounded bg-gray-800 px-2 py-1 text-xs text-white opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                    Exposing Brian, Click me!
+                  </span>
+                </div>
+              </Link>
             </div>
             <div>
-              <h1 className="text-xl font-bold">Brian Coffee</h1>
+              <h1 className="text-xl font-bold">BP.HAM Popup</h1>
+
               <p className="text-xs text-amber-200">Welcome, {customerName}</p>
             </div>
           </div>
-
           <Sheet>
             <SheetTrigger asChild>
               <Button
@@ -438,7 +444,6 @@ export default function Order() {
                   Your Order
                 </SheetTitle>
               </SheetHeader>
-
               {cart.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-[70vh]">
                   <div className="bg-amber-100 p-8 rounded-full mb-4">
@@ -470,7 +475,10 @@ export default function Order() {
                         >
                           <div className="h-16 w-16 rounded-md overflow-hidden mr-3 flex-shrink-0 border border-amber-200">
                             <img
-                              src={item.imageURL || "/placeholder.svg"}
+                              src={
+                                item.imageURL ||
+                                "/placeholder.svg?height=64&width=64"
+                              }
                               alt={item.name}
                               className="h-full w-full object-cover"
                             />
@@ -488,7 +496,7 @@ export default function Order() {
                               ${Number(item.price).toFixed(2)}
                             </p>
                             <p className="text-sm text-amber-800 mt-1 font-medium">
-                              {item.notes.length > 0 ? (
+                              {item.notes && item.notes.length > 0 ? (
                                 <>Notes: {item.notes}</>
                               ) : null}
                             </p>
@@ -497,7 +505,7 @@ export default function Order() {
                             <Button
                               variant="outline"
                               size="icon"
-                              className="h-8 w-8 border-amber-300 text-amber-700 hover:bg-amber-100 hover:text-amber-900"
+                              className="h-8 w-8 border-amber-300 text-amber-700 hover:bg-amber-100 hover:text-amber-900 bg-transparent"
                               onClick={() => removeFromCart(item.uniqueId)}
                             >
                               <Minus className="h-4 w-4" />
@@ -508,7 +516,7 @@ export default function Order() {
                             <Button
                               variant="outline"
                               size="icon"
-                              className="h-8 w-8 border-amber-300 text-amber-700 hover:bg-amber-100 hover:text-amber-900"
+                              className="h-8 w-8 border-amber-300 text-amber-700 hover:bg-amber-100 hover:text-amber-900 bg-transparent"
                               onClick={() =>
                                 addToCart(coffeeItem, item.selectedOptions)
                               }
@@ -528,7 +536,6 @@ export default function Order() {
                       );
                     })}
                   </div>
-
                   <div className="border-t border-amber-200 pt-4 mt-auto bg-amber-50/80 backdrop-blur-sm">
                     <div className="flex justify-between py-2">
                       <span className="font-medium text-amber-800">
@@ -566,82 +573,104 @@ export default function Order() {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-4">
-        {/* Category Tabs */}
+        {/* Category Tabs - Improved for better mobile responsiveness */}
         <Tabs
           defaultValue={selectedCategory}
           onValueChange={setSelectedCategory}
           className="mb-4"
         >
-          <TabsList className="w-full grid grid-cols-2 sm:grid-cols-4 gap-1 p-1 bg-amber-100 rounded-lg">
-            {categories.map((category) => (
-              <TabsTrigger
-                key={category.id}
-                value={category.id}
-                className="px-2 py-2 data-[state=active]:bg-white data-[state=active]:text-amber-800 rounded-md flex items-center justify-center gap-1.5 text-sm"
-              >
-                {category.category === "Bakery" ? (
-                  <ConciergeBell className="h-4 w-4" />
-                ) : category.category === "Signature Latte" ? (
-                  <CupSoda className="h-4 w-4" />
-                ) : category.category === "Classic Latte" ? (
-                  <Coffee className="h-4 w-4" />
-                ) : (
-                  <Feather className="h-4 w-4" />
-                )}
-                <span className="truncate">{category.category}</span>
-              </TabsTrigger>
-            ))}
-          </TabsList>
+          <div className="relative overflow-x-auto pb-2">
+            <TabsList className="inline-flex w-auto min-w-full bg-amber-100 rounded-lg p-1">
+              {categories.map((category) => (
+                <TabsTrigger
+                  key={category.id}
+                  value={category.id}
+                  className="px-4 py-2 whitespace-nowrap data-[state=active]:bg-white data-[state=active]:text-amber-800 rounded-md flex items-center justify-center gap-1.5 text-sm"
+                >
+                  {category.category === "Bakery" ? (
+                    <ConciergeBell className="h-4 w-4" />
+                  ) : category.category === "Signature Latte" ? (
+                    <CupSoda className="h-4 w-4" />
+                  ) : category.category === "Classic Latte" ? (
+                    <Coffee className="h-4 w-4" />
+                  ) : (
+                    <Feather className="h-4 w-4" />
+                  )}
+                  <span>{category.category}</span>
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </div>
 
           {categories.map((category) => (
             <TabsContent key={category.id} value={category.id} className="mt-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {menuItems
                   .filter((item) => item.categoryId === category.id)
                   .map((item) => {
                     const itemQuantity = getItemQuantityInCart(item.id);
-
                     return (
                       <Card
                         key={item.id}
-                        className="overflow-hidden hover:shadow-md transition-all duration-300 rounded-lg border-amber-200 hover:border-amber-300 group"
+                        className="overflow-hidden hover:shadow-xl transition-all duration-500 rounded-2xl border-0 bg-white shadow-lg hover:scale-[1.02] group relative"
                       >
-                        <div className="aspect-video bg-amber-100 flex items-center justify-center overflow-hidden relative">
+                        {/* Image Container with consistent sizing */}
+                        <div className="relative h-48 w-full overflow-hidden bg-gradient-to-br from-amber-100 to-amber-200">
                           <img
-                            src={item.imageURL || "/placeholder.svg"}
+                            src={
+                              item.imageURL ||
+                              "/placeholder.svg?height=192&width=400"
+                            }
                             alt={item.name}
-                            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                            className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
                           />
+                          {/* Gradient overlay */}
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+                          {/* Quantity badge */}
                           {itemQuantity > 0 && (
-                            <div className="absolute top-2 right-2 bg-white text-amber-700 rounded-full h-8 w-8 flex items-center justify-center font-bold shadow-md border border-amber-200">
+                            <div className="absolute top-3 right-3 bg-amber-600 text-white rounded-full h-8 w-8 flex items-center justify-center font-bold shadow-lg border-2 border-white animate-pulse">
                               {itemQuantity}
                             </div>
                           )}
+
+                          {/* Price badge */}
+                          <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm text-amber-800 px-3 py-1 rounded-full font-bold text-sm shadow-md border border-amber-200">
+                            ${Number(item.price).toFixed(2)}
+                          </div>
                         </div>
-                        <div className="p-4">
-                          <div className="flex justify-between items-start mb-2">
-                            <h3 className="text-lg font-bold text-amber-900">
+
+                        {/* Content */}
+                        <div className="p-6">
+                          <div className="mb-3">
+                            <h3 className="text-xl font-bold text-amber-900 mb-2 line-clamp-1 group-hover:text-amber-700 transition-colors">
                               {item.name}
                             </h3>
-                            <span className="font-bold text-amber-800 bg-amber-100 px-2 py-1 rounded-full text-sm">
-                              ${Number(item.price).toFixed(2)}
-                            </span>
+                            <p className="text-amber-600 text-sm leading-relaxed line-clamp-2 h-10">
+                              {item.description}
+                            </p>
                           </div>
-                          <p className="text-amber-700 text-sm mb-4">
-                            {item.description}
-                          </p>
+
+                          {/* Action button */}
                           <Button
                             onClick={() => openCustomization(item)}
-                            className="w-full bg-amber-800 hover:bg-amber-900 rounded-md py-2 group-hover:shadow-md transition-all"
+                            className="w-full bg-gradient-to-r from-amber-700 to-amber-800 hover:from-amber-800 hover:to-amber-900 text-white rounded-xl py-3 font-semibold shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5 relative overflow-hidden group/btn"
                           >
-                            Customize
-                            {itemQuantity > 0 && (
-                              <Badge className="ml-2 bg-amber-600 text-white border-0">
-                                {itemQuantity}
-                              </Badge>
-                            )}
+                            <span className="relative z-10 flex items-center justify-center gap-2">
+                              Customize
+                              {itemQuantity > 0 && (
+                                <Badge className="bg-amber-500 text-white border-0 px-2 py-0.5 text-xs">
+                                  {itemQuantity} in cart
+                                </Badge>
+                              )}
+                            </span>
+                            {/* Button shine effect */}
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover/btn:translate-x-full transition-transform duration-700" />
                           </Button>
                         </div>
+
+                        {/* Card shine effect */}
+                        <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
                       </Card>
                     );
                   })}
@@ -676,7 +705,6 @@ export default function Order() {
                 Your Order
               </SheetTitle>
             </SheetHeader>
-
             {cart.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-[50vh]">
                 <div className="bg-amber-100 p-8 rounded-full mb-4">
@@ -706,7 +734,10 @@ export default function Order() {
                       >
                         <div className="h-16 w-16 rounded-md overflow-hidden mr-3 flex-shrink-0 border border-amber-200">
                           <img
-                            src={item.imageURL || "/placeholder.svg"}
+                            src={
+                              item.imageURL ||
+                              "/placeholder.svg?height=64&width=64"
+                            }
                             alt={item.name}
                             className="h-full w-full object-cover"
                           />
@@ -728,7 +759,7 @@ export default function Order() {
                           <Button
                             variant="outline"
                             size="icon"
-                            className="h-8 w-8 border-amber-300 text-amber-700 hover:bg-amber-100 hover:text-amber-900"
+                            className="h-8 w-8 border-amber-300 text-amber-700 hover:bg-amber-100 hover:text-amber-900 bg-transparent"
                             onClick={() => removeFromCart(item.uniqueId)}
                           >
                             <Minus className="h-4 w-4" />
@@ -739,7 +770,7 @@ export default function Order() {
                           <Button
                             variant="outline"
                             size="icon"
-                            className="h-8 w-8 border-amber-300 text-amber-700 hover:bg-amber-100 hover:text-amber-900"
+                            className="h-8 w-8 border-amber-300 text-amber-700 hover:bg-amber-100 hover:text-amber-900 bg-transparent"
                             onClick={() =>
                               addToCart(coffeeItem, item.selectedOptions)
                             }
@@ -759,7 +790,6 @@ export default function Order() {
                     );
                   })}
                 </div>
-
                 <div className="border-t border-amber-200 pt-4 mt-auto bg-amber-50/80 backdrop-blur-sm">
                   <div className="flex justify-between py-2">
                     <span className="font-medium text-amber-800">Subtotal</span>
@@ -794,156 +824,187 @@ export default function Order() {
 
       {/* Customization Modal */}
       {selectedItem && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-auto shadow-xl border border-amber-200">
-            <div className="sticky top-0 z-10 bg-white p-4 border-b border-amber-100 flex justify-between items-center">
-              <div className="flex items-center gap-3">
-                <div className="h-12 w-12 rounded-md overflow-hidden">
-                  <img
-                    src={selectedItem.imageURL || "/placeholder.svg"}
-                    alt={selectedItem.name}
-                    className="h-full w-full object-cover"
-                  />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-amber-900">
-                    {selectedItem.name}
-                  </h3>
-                  <p className="text-sm text-amber-600">
-                    {selectedItem.description}
-                  </p>
-                </div>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl max-w-lg w-full max-h-[95vh] overflow-hidden shadow-2xl border-0 animate-in fade-in-0 zoom-in-95 duration-300">
+            {/* Header with Image */}
+            <div className="relative">
+              <div className="h-32 sm:h-40 w-full overflow-hidden bg-gradient-to-br from-amber-100 via-amber-200 to-orange-200">
+                <img
+                  src={
+                    selectedItem.imageURL ||
+                    "/placeholder.svg?height=160&width=400"
+                  }
+                  alt={selectedItem.name}
+                  className="h-full w-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
               </div>
+
+              {/* Close button */}
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => setSelectedItem(null)}
-                className="rounded-full hover:bg-amber-100 text-amber-700"
+                className="absolute top-4 right-4 h-10 w-10 rounded-full bg-white/90 backdrop-blur-sm hover:bg-white text-gray-700 hover:text-gray-900 shadow-lg border-0"
               >
                 <X className="h-5 w-5" />
               </Button>
+
+              {/* Product info overlay */}
+              <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+                <h2 className="text-2xl sm:text-3xl font-bold mb-2 drop-shadow-lg">
+                  {selectedItem.name}
+                </h2>
+                <p className="text-white/90 text-sm sm:text-base drop-shadow-md">
+                  {selectedItem.description}
+                </p>
+              </div>
             </div>
 
-            <div className="p-4">
-              <div className="space-y-4">
-                {/*  Options */}
+            {/* Content */}
+            <div className="p-6 max-h-[60vh] overflow-y-auto">
+              <div className="space-y-6">
+                {/* Options */}
                 {selectedItem.options &&
                 Object.keys(selectedItem.options).length > 0 ? (
                   Object.entries(selectedItem.options).map(
                     ([optionType, optionValues]) => {
-                      // Skip if no options available for this type
                       if (!optionValues || optionValues.length === 0)
                         return null;
 
                       return (
-                        <div key={optionType}>
-                          <div className="bg-amber-50 p-4 rounded-lg">
-                            <h4 className="font-medium mb-3 text-amber-900">
-                              Choose{" "}
-                              {optionType.charAt(0).toUpperCase() +
-                                optionType.slice(1)}
-                            </h4>
-                            <RadioGroup
-                              value={
-                                selectedItem.selectedOptions?.[optionType] || ""
-                              }
-                              onValueChange={(value) => {
-                                if (!selectedItem.selectedOptions) return;
+                        <div key={optionType} className="space-y-3">
+                          <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                            <div className="w-1 h-6 bg-gradient-to-b from-amber-500 to-amber-600 rounded-full" />
+                            Choose{" "}
+                            {optionType.charAt(0).toUpperCase() +
+                              optionType.slice(1)}
+                          </h3>
 
-                                setSelectedItem({
-                                  ...selectedItem,
-                                  selectedOptions: {
-                                    ...selectedItem.selectedOptions,
-                                    [optionType]: value,
-                                  },
-                                });
-                              }}
-                            >
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                {optionValues.map((option) => (
-                                  <div
-                                    key={option.id}
-                                    className="flex items-center justify-between bg-white p-2 rounded-lg border border-amber-100 hover:border-amber-300 transition-colors"
-                                  >
-                                    <div className="flex items-center gap-2">
-                                      <RadioGroupItem
-                                        value={option.id}
-                                        id={`${optionType}-${option.id}`}
-                                        className="text-amber-700"
-                                      />
-                                      <Label
-                                        htmlFor={`${optionType}-${option.id}`}
-                                        className="text-amber-900 font-medium cursor-pointer"
-                                      >
-                                        {option.name}
-                                      </Label>
-                                    </div>
-                                    {/* {option.price > 0 && (
-                                      <span className="text-amber-700 text-sm font-medium">
-                                        +${option.price.toFixed(2)}
-                                      </span>
-                                    )} */}
-                                  </div>
-                                ))}
+                          <RadioGroup
+                            value={
+                              selectedItem.selectedOptions?.[optionType] || ""
+                            }
+                            onValueChange={(value) => {
+                              if (!selectedItem.selectedOptions) return;
+                              setSelectedItem({
+                                ...selectedItem,
+                                selectedOptions: {
+                                  ...selectedItem.selectedOptions,
+                                  [optionType]: value,
+                                },
+                              });
+                            }}
+                            className="space-y-2"
+                          >
+                            {optionValues.map((option) => (
+                              <div
+                                key={option.id}
+                                className="flex items-center space-x-3 p-4 rounded-2xl border-2 border-gray-100 hover:border-amber-200 hover:bg-amber-50/50 transition-all duration-200 cursor-pointer group"
+                              >
+                                <RadioGroupItem
+                                  value={option.id}
+                                  id={`${optionType}-${option.id}`}
+                                  className="text-amber-600 border-2 border-gray-300 data-[state=checked]:border-amber-600 data-[state=checked]:bg-amber-600"
+                                />
+                                <Label
+                                  htmlFor={`${optionType}-${option.id}`}
+                                  className="flex-1 text-gray-800 font-medium cursor-pointer group-hover:text-amber-700 transition-colors"
+                                >
+                                  {option.name}
+                                </Label>
+                                {option.price > 0 && (
+                                  <span className="text-amber-600 font-semibold text-sm bg-amber-100 px-2 py-1 rounded-full">
+                                    +${option.price.toFixed(2)}
+                                  </span>
+                                )}
                               </div>
-                            </RadioGroup>
-                          </div>
+                            ))}
+                          </RadioGroup>
                         </div>
                       );
                     }
                   )
                 ) : (
-                  // Show message when no options are available
-                  <div className="bg-amber-50 p-4 rounded-lg text-center">
-                    <p className="text-amber-700">
-                      No customization options available for this item.
+                  <div className="text-center py-8">
+                    <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Coffee className="h-8 w-8 text-amber-600" />
+                    </div>
+                    <p className="text-gray-600 font-medium">
+                      Ready to order as-is!
+                    </p>
+                    <p className="text-gray-500 text-sm mt-1">
+                      No customization needed for this item.
                     </p>
                   </div>
                 )}
 
-                {/* Notes for Barista */}
-                <div className="bg-amber-50 p-4 rounded-lg">
-                  <h4 className="font-medium mb-3 text-amber-900">
+                {/* Special Instructions */}
+                <div className="space-y-3">
+                  <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                    <div className="w-1 h-6 bg-gradient-to-b from-amber-500 to-amber-600 rounded-full" />
                     Special Instructions
-                  </h4>
-                  <textarea
-                    className="w-full p-3 rounded-lg border border-amber-200 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                    placeholder="Any special requests for the barista? (e.g., extra hot, light ice, etc.)"
-                    rows={3}
-                    value={selectedItem.notes || ""}
-                    onChange={(e) => {
-                      setSelectedItem({
-                        ...selectedItem,
-                        notes: e.target.value,
-                      });
-                    }}
-                  />
+                  </h3>
+                  <div className="relative">
+                    <textarea
+                      className="w-full p-4 rounded-2xl border-2 border-gray-100 focus:border-amber-300 focus:ring-0 focus:outline-none resize-none transition-colors bg-gray-50/50 hover:bg-white hover:border-gray-200"
+                      placeholder="Any special requests? (e.g., extra hot, light foam, etc.)"
+                      rows={3}
+                      value={selectedItem.notes || ""}
+                      onChange={(e) => {
+                        setSelectedItem({
+                          ...selectedItem,
+                          notes: e.target.value,
+                        });
+                      }}
+                    />
+                    <div className="absolute bottom-3 right-3 text-xs text-gray-400">
+                      {(selectedItem.notes || "").length}/150
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="p-6 bg-gray-50/50 border-t border-gray-100">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <p className="text-sm text-gray-600 font-medium">
+                    Total Price
+                  </p>
+                  <p className="text-3xl font-bold text-gray-900">
+                    ${Number(selectedItem.price).toFixed(2)}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs text-gray-500">Tax included</p>
+                  <p className="text-sm text-amber-600 font-medium">
+                    Ready in 5-10 min
+                  </p>
                 </div>
               </div>
 
-              <div className="sticky bottom-0 bg-white pt-4 mt-4 border-t border-amber-100">
-                <div className="flex justify-between items-center bg-amber-50 p-4 rounded-lg">
-                  <div>
-                    <p className="text-sm text-amber-700">Total price</p>
-                    <p className="text-xl font-bold text-amber-900">
-                      ${Number(selectedItem.price).toFixed(2)}
-                    </p>
-                  </div>
-                  <Button
-                    onClick={() =>
-                      addToCart(selectedItem, selectedItem.selectedOptions)
-                    }
-                    disabled={!allOptionsSelected}
-                    className={`rounded-md px-6 py-6 ${
-                      allOptionsSelected
-                        ? "bg-amber-800 hover:bg-amber-900"
-                        : "bg-amber-300 cursor-not-allowed"
-                    }`}
-                  >
+              <Button
+                onClick={() =>
+                  addToCart(selectedItem, selectedItem.selectedOptions)
+                }
+                disabled={!allOptionsSelected}
+                className={`w-full h-14 rounded-2xl font-semibold text-lg transition-all duration-300 ${
+                  allOptionsSelected
+                    ? "bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                    : "bg-gray-200 text-gray-500 cursor-not-allowed"
+                }`}
+              >
+                {allOptionsSelected ? (
+                  <span className="flex items-center gap-2">
+                    <Plus className="h-5 w-5" />
                     Add to Cart
-                  </Button>
-                </div>
-              </div>
+                  </span>
+                ) : (
+                  "Please select all options"
+                )}
+              </Button>
             </div>
           </div>
         </div>
