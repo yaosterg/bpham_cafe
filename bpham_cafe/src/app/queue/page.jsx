@@ -116,11 +116,12 @@ function OrderCard({ order, drinks, bakery, onDelete, onComplete }) {
           ))}
         </div>
         <div className="mb-4">
-          {bakery.length > 0 && (
+          {/* {bakery.length > 0 && (
             <h4 className="font-semibold text-sm text-foreground mb-2 uppercase tracking-wide border-b border-muted pb-1">
               Bakery
             </h4>
-          )}
+          )} */}
+          {console.log("Bakery items:", bakery, "Order", order)}
           {bakery.map((item, index) => (
             <div
               key={index}
@@ -242,6 +243,7 @@ function useOrderRealtime() {
         },
         (payload) => {
           console.log("Order change received:", payload);
+
           dispatch(findAllOrders()); // refetch orders to update UI
         }
       )
@@ -278,6 +280,9 @@ export default function OrderQueue() {
     .sort((a, b) => a.id - b.id); // Oldest first (longest elapsed time)
 
   const handleDeleteOrder = async (order) => {
+    console.log("Deleting order:", order);
+    console.log("Orders:", orders);
+    console.log("Order Items:", orderItems);
     await dispatch(deleteOrder(order));
   };
 
@@ -370,7 +375,9 @@ export default function OrderQueue() {
                     drinks={orderItems
                       .filter((item) => item.orderId === order.id)
                       .filter((item) => item.categoryId !== 25)}
-                    bakery={orderItems.filter((item) => item.categoryId === 25)}
+                    bakery={orderItems
+                      .filter((item) => item.orderId === order.id)
+                      .filter((item) => item.categoryId === 25)}
                     onDelete={() => handleDeleteOrder(order)}
                     onComplete={() => handleCompleteOrder(order)}
                   />

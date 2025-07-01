@@ -5,6 +5,7 @@ const prisma = new PrismaClient();
 export async function POST(req) {
   try {
     const formData = await req.json();
+    console.log("Form data received for deletion:", formData);
 
     const deleteOrderItems = await prisma.orderItem.deleteMany({
       where: { orderId: formData.id },
