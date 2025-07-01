@@ -242,7 +242,7 @@ export default function CategoryItems({
               <div
                 key={item.id}
                 className={`bg-white border border-[#e6ddd0] rounded-xl shadow-md hover:shadow-lg transition-shadow duration-200 w-full overflow-hidden ${
-                  !item.status ? "opacity-70" : ""
+                  !item.menuStatus ? "opacity-70" : ""
                 }`}
               >
                 <div className="p-5">
@@ -691,6 +691,36 @@ export default function CategoryItems({
                       label="Milk Options (Regular/Lactaid/Oat/Almond):"
                     />
                   </div>
+                  {"Temperature" in formData.options &&
+                    "Milk" in formData.options && (
+                      <div className="p-4 bg-white rounded-xl border border-[#d1c5b5] shadow-sm">
+                        <ToggleSwitch
+                          checked={"Foam" in (formData.options ?? {})}
+                          onChange={() => {
+                            setFormData((prev) => {
+                              if ("Foam" in prev.options) {
+                                // Remove 'Foam' key
+                                const { Foam, ...rest } = prev.options;
+                                return { ...prev, options: rest };
+                              } else {
+                                // Add 'Foam' key with fixed object
+                                return {
+                                  ...prev,
+                                  options: {
+                                    ...prev.options,
+                                    Foam: [
+                                      { id: "foam", name: "Foam" },
+                                      { id: "nofoam", name: "No Foam" },
+                                    ],
+                                  },
+                                };
+                              }
+                            });
+                          }}
+                          label="Foam Options:"
+                        />
+                      </div>
+                    )}
 
                   {/* Form Actions */}
                   <div className="flex justify-end gap-3 pt-4 border-t border-[#e6ddd0]">

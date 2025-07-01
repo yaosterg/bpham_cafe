@@ -117,17 +117,23 @@ function OrderCard({ order, drinks, bakery, onDelete, onComplete }) {
                       <span className="font-medium">{item.name}</span>
                     </div>
                     {item.selectedOptions &&
-                      Object.entries(item.selectedOptions).map(
-                        ([key, value]) => (
+                      Object.entries(item.selectedOptions)
+                        .sort(([a], [b]) => {
+                          if (a === "Temperature" && b !== "Temperature")
+                            return -1;
+                          if (b === "Temperature" && a !== "Temperature")
+                            return 1;
+                          return a.localeCompare(b);
+                        })
+                        .map(([key, value]) => (
                           <p
                             key={key}
-                            className="text-sm text-muted-foreground ml-5"
+                            className="text-sm text-muted-foreground ml-5 italic"
                           >
-                            {key[0].toUpperCase() + key.slice(1)}:{" "}
-                            {value[0].toUpperCase() + value.slice(1)}
+                            {/* {key[0].toUpperCase() + key.slice(1)}:{" "} */}
+                            {key}: {value[0].toUpperCase() + value.slice(1)}
                           </p>
-                        )
-                      )}
+                        ))}
                     {item.notes && (
                       <p className="text-sm text-blue-500 ml-5">
                         Notes: {item.notes}
@@ -173,22 +179,6 @@ function OrderCard({ order, drinks, bakery, onDelete, onComplete }) {
                       </Badge>
                       <span className="font-medium">{item.name}</span>
                     </div>
-                    {item.selectedOptions &&
-                      Object.entries(item.selectedOptions)
-                        .sort(([a], [b]) => {
-                          if (a === "temp") return -1;
-                          if (b === "temp") return 1;
-                          return 0;
-                        })
-                        .map(([key, value]) => (
-                          <p
-                            key={key}
-                            className="text-sm text-muted-foreground ml-5"
-                          >
-                            {key[0].toUpperCase() + key.slice(1)}:{" "}
-                            {value[0].toUpperCase() + value.slice(1)}
-                          </p>
-                        ))}
                     {item.notes && (
                       <p className="text-sm text-blue-500 ml-5">
                         Notes: {item.notes}

@@ -390,7 +390,16 @@ export default function Order() {
     selectedItem &&
     selectedItem.options &&
     Object.keys(selectedItem.options).every((optionType) => {
-      // check selectedOptions exists and has a non-empty value for each optionType
+      if (
+        optionType === "Foam" &&
+        (!selectedItem.selectedOptions?.Temperature ||
+          !selectedItem.selectedOptions?.Milk ||
+          selectedItem.selectedOptions?.Temperature !== "cold" ||
+          selectedItem.selectedOptions?.Milk !== "regular")
+      ) {
+        // Foam is not relevant, so skip requiring it
+        return true;
+      }
       return (
         selectedItem.selectedOptions &&
         selectedItem.selectedOptions[optionType] !== undefined &&
@@ -615,14 +624,14 @@ export default function Order() {
                         className="overflow-hidden hover:shadow-xl transition-all duration-500 rounded-2xl border-0 bg-white shadow-lg hover:scale-[1.02] group relative"
                       >
                         {/* Image Container with consistent sizing */}
-                        <div className="relative h-48 w-full overflow-hidden bg-gradient-to-br from-amber-100 to-amber-200">
+                        <div className="relative h-58 w-full overflow-hidden bg-gradient-to-br from-amber-100 to-amber-200">
                           <img
                             src={
                               item.imageURL ||
                               "/placeholder.svg?height=192&width=400"
                             }
                             alt={item.name}
-                            className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+                            className="h-full w-full object-cover object-center transition-transform duration-700 group-hover:scale-110"
                           />
                           {/* Gradient overlay */}
                           <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
@@ -872,6 +881,16 @@ export default function Order() {
                       if (!optionValues || optionValues.length === 0)
                         return null;
 
+                      if (
+                        optionType === "Foam" &&
+                        (!selectedItem.selectedOptions?.Temperature || // no temperature chosen
+                          !selectedItem.selectedOptions?.Milk || // no milk chosen
+                          selectedItem.selectedOptions?.Temperature !==
+                            "cold" || // not Cold
+                          selectedItem.selectedOptions?.Milk !== "regular") // not Dairy
+                      ) {
+                        return null;
+                      }
                       return (
                         <div key={optionType} className="space-y-3">
                           <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
@@ -886,6 +905,7 @@ export default function Order() {
                               selectedItem.selectedOptions?.[optionType] || ""
                             }
                             onValueChange={(value) => {
+                              console.log(selectedItem.selectedOptions);
                               if (!selectedItem.selectedOptions) return;
                               setSelectedItem({
                                 ...selectedItem,
