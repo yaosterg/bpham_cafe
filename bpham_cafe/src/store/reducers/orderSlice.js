@@ -35,6 +35,7 @@ export const orderSlice = createSlice({
   initialState: {
     allOrders: [],
     orderItems: [],
+    createdOrder: {},
     completedOrder: {},
     deletedOrder: {},
   },
@@ -42,6 +43,7 @@ export const orderSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(createOrder.fulfilled, (state, action) => {
+        state.createdOrder = action.payload.order;
         state.allOrders.push(action.payload.order);
       })
       .addCase(findAllOrders.fulfilled, (state, action) => {
@@ -63,4 +65,5 @@ export const orderSlice = createSlice({
 
 export const selectAllOrders = (state) => state.orders.allOrders;
 export const selectOrderItems = (state) => state.orders.orderItems;
+export const selectCreatedOrder = (state) => state.orders.createdOrder;
 export default orderSlice.reducer;

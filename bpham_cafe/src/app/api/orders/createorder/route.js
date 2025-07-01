@@ -24,7 +24,7 @@ export async function POST(req) {
         orderItems: true,
       },
     });
-
+    console.log("New Order Created:", newOrder);
     return new Response(
       JSON.stringify({
         message: "Order created successfully",

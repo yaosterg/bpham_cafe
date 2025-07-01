@@ -35,7 +35,11 @@ import {
 } from "@/store/reducers/categorySlice";
 import { selectAllMenuItems, findAllItems } from "@/store/reducers/itemSlice";
 import Image from "next/image";
-import { createOrder } from "@/store/reducers/orderSlice";
+import {
+  completeOrder,
+  createOrder,
+  selectCreatedOrder,
+} from "@/store/reducers/orderSlice";
 import Link from "next/link";
 
 const customStyles = `
@@ -62,6 +66,7 @@ export default function Order() {
   const [checkoutState, setCheckoutState] = useState("browsing"); // browsing, processing, success
   const [customerName, setCustomerName] = useState("");
   const [nameEntered, setNameEntered] = useState(false);
+  const createdOrder = useSelector(selectCreatedOrder);
 
   const categories = useSelector(selectAllCategories);
   const menuItems = useSelector(selectAllMenuItems);
@@ -83,13 +88,13 @@ export default function Order() {
       name: customerName,
       items: cart,
     };
-    await dispatch(createOrder(orderDetails));
-    // Simulate processing time
-    setTimeout(() => {
+    const result = await dispatch(createOrder(orderDetails));
+    if (createOrder.fulfilled.match(result)) {
       setCheckoutState("success");
-      // Clear cart after successful checkout
       setCart([]);
-    }, 2000);
+    } else {
+      setCheckoutState("error");
+    }
   };
 
   // Handle name submission
@@ -366,20 +371,43 @@ export default function Order() {
             <Check className="h-16 w-16 text-amber-800" />
           </div>
           <h1 className="text-3xl font-bold text-amber-800 mb-4">
-            Thank You, {customerName}!
+            Thank You, {createdOrder.name}!
           </h1>
           <p className="text-amber-700 mb-6">
             Your order has been successfully placed. We're preparing your drinks
-            and they'll be ready soon!
+            and will bring them to you as soon as they're ready!
           </p>
           <p className="text-amber-600 mb-8">
-            Order #:{" "}
-            {Math.floor(Math.random() * 10000)
-              .toString()
-              .padStart(4, "0")}
+            Order #:{createdOrder.id + 1000}
           </p>
           <p className="text-amber-500 text-sm">
-            Please refresh the page to place another order.
+            Please refresh the page to place another order. Please remember to
+            fill out your surveys!
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (checkoutState === "error") {
+    return (
+      <div className="fixed inset-0 flex flex-col items-center justify-center bg-amber-50">
+        <div className="flex flex-col items-center max-w-md text-center px-4">
+          <div className="bg-amber-100 p-4 rounded-full mb-6">
+            <Check className="h-16 w-16 text-amber-800" />
+          </div>
+          <h1 className="text-3xl font-bold text-amber-800 mb-4">
+            I am so sorry, {customerName}!
+          </h1>
+          <p className="text-amber-700 mb-6">
+            Your order has been errorly placed. This janky software ran into an
+            issue while processing your order. Please try again or order with
+            Yao directly!
+          </p>
+
+          <p className="text-amber-500 text-sm">
+            Please refresh the page to place another order. Please remember to
+            fill out your surveys!
           </p>
         </div>
       </div>
