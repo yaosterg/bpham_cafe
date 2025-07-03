@@ -61,17 +61,17 @@ export default function Order() {
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(true);
   const [cart, setCart] = useState([]);
-  const [selectedCategory, setSelectedCategory] = useState("Bakery");
+  const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedItem, setSelectedItem] = useState();
   const [checkoutState, setCheckoutState] = useState("browsing"); // browsing, processing, success
   const [customerName, setCustomerName] = useState("");
   const [nameEntered, setNameEntered] = useState(false);
-  const createdOrder = useSelector(selectCreatedOrder);
 
+  const createdOrder = useSelector(selectCreatedOrder);
   const categories = useSelector(selectAllCategories);
   const menuItems = useSelector(selectAllMenuItems);
 
-  // Simulate loading
+  // Simulate loading and set default category
   useEffect(() => {
     const findCategories = async () => {
       await dispatch(findAllCategories());
@@ -80,6 +80,13 @@ export default function Order() {
     findCategories();
     setLoading(false);
   }, []);
+
+  // Set default category when categories are loaded
+  useEffect(() => {
+    if (categories.length > 0 && !selectedCategory) {
+      setSelectedCategory(categories[0].id);
+    }
+  }, [categories, selectedCategory]);
 
   // Process checkout
   const processCheckout = async () => {
@@ -404,7 +411,6 @@ export default function Order() {
             issue while processing your order. Please try again or order with
             Yao directly!
           </p>
-
           <p className="text-amber-500 text-sm">
             Please refresh the page to place another order. Please remember to
             fill out your surveys!
@@ -428,6 +434,7 @@ export default function Order() {
         // Foam is not relevant, so skip requiring it
         return true;
       }
+
       return (
         selectedItem.selectedOptions &&
         selectedItem.selectedOptions[optionType] !== undefined &&
@@ -438,14 +445,12 @@ export default function Order() {
   return (
     <div className="min-h-screen bg-amber-50 pb-20 font-sans">
       <style jsx>{customStyles}</style>
-      {/* Rest of the component */}
       {/* Header */}
       <header className="sticky top-0 z-10 bg-amber-800 text-white p-4 shadow-md">
         <div className="container mx-auto flex justify-between items-center">
           <div className="flex items-center gap-2">
             <div className="bg-white p-2 rounded-full">
               <Link href="https://www.instagram.com/bp.hamlife/">
-                {" "}
                 <div className="relative group inline-block">
                   <Coffee className="text-foreground" />
                   <span className="absolute top-full left-1/2 mt-2 w-max -translate-x-1/2 rounded bg-gray-800 px-2 py-1 text-xs text-white opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
@@ -456,7 +461,6 @@ export default function Order() {
             </div>
             <div>
               <h1 className="text-xl font-bold">BP.HAM Popup</h1>
-
               <p className="text-xs text-amber-200">Welcome, {customerName}</p>
             </div>
           </div>
@@ -481,6 +485,7 @@ export default function Order() {
                   Your Order
                 </SheetTitle>
               </SheetHeader>
+
               {cart.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-[70vh]">
                   <div className="bg-amber-100 p-8 rounded-full mb-4">
@@ -510,18 +515,19 @@ export default function Order() {
                           key={item.uniqueId}
                           className="flex py-4 border-b border-amber-200 hover:bg-amber-100/50 rounded-lg px-2 transition-colors"
                         >
-                          <div className="h-16 w-16 rounded-md overflow-hidden mr-3 flex-shrink-0 border border-amber-200">
+                          <div className="h-12 w-12 rounded-md overflow-hidden mr-3 flex-shrink-0 border border-amber-200">
                             <img
                               src={
                                 item.imageURL ||
-                                "/placeholder.svg?height=64&width=64"
+                                "/placeholder.svg?height=48&width=48" ||
+                                "/placeholder.svg"
                               }
                               alt={item.name}
                               className="h-full w-full object-cover"
                             />
                           </div>
-                          <div className="flex-1">
-                            <h3 className="font-medium text-amber-900">
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-medium text-amber-900 text-sm">
                               {item.name}
                             </h3>
                             {formattedOptions.map((option, idx) => (
@@ -532,13 +538,13 @@ export default function Order() {
                             <p className="text-sm text-amber-800 mt-1 font-medium">
                               ${Number(item.price).toFixed(2)}
                             </p>
-                            <p className="text-sm text-amber-800 mt-1 font-medium">
-                              {item.notes && item.notes.length > 0 ? (
-                                <>Notes: {item.notes}</>
-                              ) : null}
-                            </p>
+                            {item.notes && item.notes.length > 0 && (
+                              <p className="text-xs text-amber-700 mt-1">
+                                Notes: {item.notes}
+                              </p>
+                            )}
                           </div>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 ml-2">
                             <Button
                               variant="outline"
                               size="icon"
@@ -547,7 +553,7 @@ export default function Order() {
                             >
                               <Minus className="h-4 w-4" />
                             </Button>
-                            <span className="w-8 text-center font-medium text-amber-900">
+                            <span className="w-8 text-center font-medium text-amber-900 text-sm">
                               {item.quantity}
                             </span>
                             <Button
@@ -573,6 +579,7 @@ export default function Order() {
                       );
                     })}
                   </div>
+
                   <div className="border-t border-amber-200 pt-4 mt-auto bg-amber-50/80 backdrop-blur-sm">
                     <div className="flex justify-between py-2">
                       <span className="font-medium text-amber-800">
@@ -610,112 +617,116 @@ export default function Order() {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-4">
-        {/* Category Tabs - Improved for better mobile responsiveness */}
-        <Tabs
-          defaultValue={selectedCategory}
-          onValueChange={setSelectedCategory}
-          className="mb-4"
-        >
-          <div className="relative overflow-x-auto pb-2">
-            <TabsList className="inline-flex w-auto min-w-full bg-amber-100 rounded-lg p-1">
-              {categories.map((category) => (
-                <TabsTrigger
-                  key={category.id}
-                  value={category.id}
-                  className="px-4 py-2 whitespace-nowrap data-[state=active]:bg-white data-[state=active]:text-amber-800 rounded-md flex items-center justify-center gap-1.5 text-sm"
-                >
-                  {category.category === "Bakery" ? (
-                    <ConciergeBell className="h-4 w-4" />
-                  ) : category.category === "Signature Latte" ? (
-                    <CupSoda className="h-4 w-4" />
-                  ) : category.category === "Classic Latte" ? (
-                    <Coffee className="h-4 w-4" />
-                  ) : (
-                    <Feather className="h-4 w-4" />
-                  )}
-                  <span>{category.category}</span>
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </div>
+        {/* Category Tabs - Made more mobile-friendly */}
+        <div className="mb-6">
+          <Tabs value={selectedCategory} onValueChange={setSelectedCategory}>
+            <div className="sticky top-16 bg-amber-50 pb-3 z-[5]">
+              <TabsList className="w-full bg-amber-100 p-1 grid grid-cols-4 gap-1 h-auto">
+                {categories.map((category) => (
+                  <TabsTrigger
+                    key={category.id}
+                    value={category.id}
+                    className="flex flex-col items-center gap-1 p-3 text-xs data-[state=active]:bg-white data-[state=active]:text-amber-800 rounded-md"
+                  >
+                    {category.category === "Bakery" ? (
+                      <ConciergeBell className="h-4 w-4" />
+                    ) : category.category === "Signature Latte" ? (
+                      <CupSoda className="h-4 w-4" />
+                    ) : category.category === "Classic Latte" ? (
+                      <Coffee className="h-4 w-4" />
+                    ) : (
+                      <Feather className="h-4 w-4" />
+                    )}
+                    <span className="leading-tight">{category.category}</span>
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </div>
 
-          {categories.map((category) => (
-            <TabsContent key={category.id} value={category.id} className="mt-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {menuItems
-                  .filter((item) => item.categoryId === category.id)
-                  .map((item) => {
-                    const itemQuantity = getItemQuantityInCart(item.id);
-                    if (!item.menuStatus) return null;
-                    return (
-                      <Card
-                        key={item.id}
-                        className="overflow-hidden hover:shadow-xl transition-all duration-500 rounded-2xl border-0 bg-white shadow-lg hover:scale-[1.02] group relative"
-                      >
-                        {/* Image Container with consistent sizing */}
-                        <div className="relative h-58 w-full overflow-hidden bg-gradient-to-br from-amber-100 to-amber-200">
-                          <img
-                            src={
-                              item.imageURL ||
-                              "/placeholder.svg?height=192&width=400"
-                            }
-                            alt={item.name}
-                            className="h-full w-full object-cover object-center transition-transform duration-700 group-hover:scale-110"
-                          />
-                          {/* Gradient overlay */}
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            {categories.map((category) => (
+              <TabsContent
+                key={category.id}
+                value={category.id}
+                className="mt-4"
+              >
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {menuItems
+                    .filter((item) => item.categoryId === category.id)
+                    .map((item) => {
+                      const itemQuantity = getItemQuantityInCart(item.id);
+                      if (!item.menuStatus) return null;
 
-                          {/* Quantity badge */}
-                          {itemQuantity > 0 && (
-                            <div className="absolute top-3 right-3 bg-amber-600 text-white rounded-full h-8 w-8 flex items-center justify-center font-bold shadow-lg border-2 border-white animate-pulse">
-                              {itemQuantity}
+                      return (
+                        <Card
+                          key={item.id}
+                          className="overflow-hidden hover:shadow-xl transition-all duration-500 rounded-2xl border-0 bg-white shadow-lg hover:scale-[1.02] group relative"
+                        >
+                          {/* Image Container - Made much taller for portrait photos */}
+                          <div className="relative h-80 w-full overflow-hidden bg-gradient-to-br from-amber-100 to-amber-200">
+                            <img
+                              src={
+                                item.imageURL ||
+                                "/placeholder.svg?height=320&width=400" ||
+                                "/placeholder.svg"
+                              }
+                              alt={item.name}
+                              className="h-full w-full object-cover object-center transition-transform duration-700 group-hover:scale-110"
+                            />
+                            {/* Gradient overlay */}
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+                            {/* Quantity badge */}
+                            {itemQuantity > 0 && (
+                              <div className="absolute top-3 right-3 bg-amber-600 text-white rounded-full h-8 w-8 flex items-center justify-center font-bold shadow-lg border-2 border-white animate-pulse">
+                                {itemQuantity}
+                              </div>
+                            )}
+
+                            {/* Price badge */}
+                            <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm text-amber-800 px-3 py-1 rounded-full font-bold text-sm shadow-md border border-amber-200">
+                              ${Number(item.price).toFixed(2)}
                             </div>
-                          )}
-
-                          {/* Price badge */}
-                          <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm text-amber-800 px-3 py-1 rounded-full font-bold text-sm shadow-md border border-amber-200">
-                            ${Number(item.price).toFixed(2)}
-                          </div>
-                        </div>
-
-                        {/* Content */}
-                        <div className="p-6">
-                          <div className="mb-3">
-                            <h3 className="text-xl font-bold text-amber-900 mb-2 line-clamp-1 group-hover:text-amber-700 transition-colors">
-                              {item.name}
-                            </h3>
-                            <p className="text-amber-600 text-sm leading-relaxed line-clamp-2 h-10">
-                              {item.description}
-                            </p>
                           </div>
 
-                          {/* Action button */}
-                          <Button
-                            onClick={() => openCustomization(item)}
-                            className="w-full bg-gradient-to-r from-amber-700 to-amber-800 hover:from-amber-800 hover:to-amber-900 text-white rounded-xl py-3 font-semibold shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5 relative overflow-hidden group/btn"
-                          >
-                            <span className="relative z-10 flex items-center justify-center gap-2">
-                              Customize
-                              {itemQuantity > 0 && (
-                                <Badge className="bg-amber-500 text-white border-0 px-2 py-0.5 text-xs">
-                                  {itemQuantity} in cart
-                                </Badge>
-                              )}
-                            </span>
-                            {/* Button shine effect */}
-                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover/btn:translate-x-full transition-transform duration-700" />
-                          </Button>
-                        </div>
+                          {/* Content */}
+                          <div className="p-6">
+                            <div className="mb-3">
+                              <h3 className="text-xl font-bold text-amber-900 mb-2 line-clamp-1 group-hover:text-amber-700 transition-colors">
+                                {item.name}
+                              </h3>
+                              <p className="text-amber-600 text-sm leading-relaxed line-clamp-2 h-10">
+                                {item.description}
+                              </p>
+                            </div>
 
-                        {/* Card shine effect */}
-                        <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-                      </Card>
-                    );
-                  })}
-              </div>
-            </TabsContent>
-          ))}
-        </Tabs>
+                            {/* Action button */}
+                            <Button
+                              onClick={() => openCustomization(item)}
+                              className="w-full bg-gradient-to-r from-amber-700 to-amber-800 hover:from-amber-800 hover:to-amber-900 text-white rounded-xl py-3 font-semibold shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5 relative overflow-hidden group/btn"
+                            >
+                              <span className="relative z-10 flex items-center justify-center gap-2">
+                                Customize
+                                {itemQuantity > 0 && (
+                                  <Badge className="bg-amber-500 text-white border-0 px-2 py-0.5 text-xs">
+                                    {itemQuantity} in cart
+                                  </Badge>
+                                )}
+                              </span>
+                              {/* Button shine effect */}
+                              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover/btn:translate-x-full transition-transform duration-700" />
+                            </Button>
+                          </div>
+
+                          {/* Card shine effect */}
+                          <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                        </Card>
+                      );
+                    })}
+                </div>
+              </TabsContent>
+            ))}
+          </Tabs>
+        </div>
       </main>
 
       {/* Mobile Cart Button */}
@@ -743,6 +754,7 @@ export default function Order() {
                 Your Order
               </SheetTitle>
             </SheetHeader>
+
             {cart.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-[50vh]">
                 <div className="bg-amber-100 p-8 rounded-full mb-4">
@@ -770,18 +782,19 @@ export default function Order() {
                         key={item.uniqueId}
                         className="flex py-4 border-b border-amber-200 hover:bg-amber-100/50 rounded-lg px-2 transition-colors"
                       >
-                        <div className="h-16 w-16 rounded-md overflow-hidden mr-3 flex-shrink-0 border border-amber-200">
+                        <div className="h-12 w-12 rounded-md overflow-hidden mr-3 flex-shrink-0 border border-amber-200">
                           <img
                             src={
                               item.imageURL ||
-                              "/placeholder.svg?height=64&width=64"
+                              "/placeholder.svg?height=48&width=48" ||
+                              "/placeholder.svg"
                             }
                             alt={item.name}
                             className="h-full w-full object-cover"
                           />
                         </div>
-                        <div className="flex-1">
-                          <h3 className="font-medium text-amber-900">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-medium text-amber-900 text-sm">
                             {item.name}
                           </h3>
                           {formattedOptions.map((option, idx) => (
@@ -793,7 +806,7 @@ export default function Order() {
                             ${Number(item.price).toFixed(2)} × {item.quantity}
                           </p>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 ml-2">
                           <Button
                             variant="outline"
                             size="icon"
@@ -802,7 +815,7 @@ export default function Order() {
                           >
                             <Minus className="h-4 w-4" />
                           </Button>
-                          <span className="w-8 text-center font-medium text-amber-900">
+                          <span className="w-8 text-center font-medium text-amber-900 text-sm">
                             {item.quantity}
                           </span>
                           <Button
@@ -828,6 +841,7 @@ export default function Order() {
                     );
                   })}
                 </div>
+
                 <div className="border-t border-amber-200 pt-4 mt-auto bg-amber-50/80 backdrop-blur-sm">
                   <div className="flex justify-between py-2">
                     <span className="font-medium text-amber-800">Subtotal</span>
@@ -860,17 +874,18 @@ export default function Order() {
         </Sheet>
       </div>
 
-      {/* Customization Modal */}
+      {/* Customization Modal - Completely redesigned to fit all screen sizes */}
       {selectedItem && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-3xl max-w-lg w-full max-h-[95vh] overflow-hidden shadow-2xl border-0 animate-in fade-in-0 zoom-in-95 duration-300">
-            {/* Header with Image */}
-            <div className="relative">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50 p-2 sm:p-4">
+          <div className="bg-white w-full max-w-lg max-h-[96vh] sm:max-h-[90vh] rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl border-0 animate-in fade-in-0 zoom-in-95 duration-300 flex flex-col">
+            {/* Header with Image - Responsive sizing */}
+            <div className="relative flex-shrink-0">
               <div className="h-32 sm:h-40 w-full overflow-hidden bg-gradient-to-br from-amber-100 via-amber-200 to-orange-200">
                 <img
                   src={
                     selectedItem.imageURL ||
-                    "/placeholder.svg?height=160&width=400"
+                    "/placeholder.svg?height=160&width=400" ||
+                    "/placeholder.svg"
                   }
                   alt={selectedItem.name}
                   className="h-full w-full object-cover"
@@ -878,30 +893,28 @@ export default function Order() {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
               </div>
 
-              {/* Close button */}
-              <Button
-                variant="ghost"
-                size="icon"
+              {/* Close button - Large and easy to tap */}
+              <button
                 onClick={() => setSelectedItem(null)}
-                className="absolute top-4 right-4 h-10 w-10 rounded-full bg-white/90 backdrop-blur-sm hover:bg-white text-gray-700 hover:text-gray-900 shadow-lg border-0"
+                className="absolute top-2 right-2 sm:top-4 sm:right-4 h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-white/90 backdrop-blur-sm hover:bg-white text-gray-700 hover:text-gray-900 shadow-lg border-0 flex items-center justify-center transition-all duration-200 active:scale-95"
               >
-                <X className="h-5 w-5" />
-              </Button>
+                <X className="h-5 w-5 sm:h-6 sm:w-6" />
+              </button>
 
               {/* Product info overlay */}
-              <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-                <h2 className="text-2xl sm:text-3xl font-bold mb-2 drop-shadow-lg">
+              <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4 text-white">
+                <h2 className="text-lg sm:text-xl font-bold mb-1 drop-shadow-lg">
                   {selectedItem.name}
                 </h2>
-                <p className="text-white/90 text-sm sm:text-base drop-shadow-md">
+                <p className="text-white/90 text-sm drop-shadow-md line-clamp-2">
                   {selectedItem.description}
                 </p>
               </div>
             </div>
 
-            {/* Content */}
-            <div className="p-6 max-h-[60vh] overflow-y-auto">
-              <div className="space-y-6">
+            {/* Scrollable Content - Optimized for small screens */}
+            <div className="flex-1 overflow-y-auto p-3 sm:p-4">
+              <div className="space-y-4 sm:space-y-6">
                 {/* Options */}
                 {selectedItem.options &&
                 Object.keys(selectedItem.options).length > 0 ? (
@@ -920,10 +933,14 @@ export default function Order() {
                       ) {
                         return null;
                       }
+
                       return (
-                        <div key={optionType} className="space-y-3">
-                          <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                            <div className="w-1 h-6 bg-gradient-to-b from-amber-500 to-amber-600 rounded-full" />
+                        <div
+                          key={optionType}
+                          className="space-y-2 sm:space-y-3"
+                        >
+                          <h3 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center gap-2">
+                            <div className="w-1 h-5 sm:h-6 bg-gradient-to-b from-amber-500 to-amber-600 rounded-full" />
                             Choose{" "}
                             {optionType.charAt(0).toUpperCase() +
                               optionType.slice(1)}
@@ -947,27 +964,27 @@ export default function Order() {
                             className="space-y-2"
                           >
                             {optionValues.map((option) => (
-                              <div
+                              <label
                                 key={option.id}
-                                className="flex items-center space-x-3 p-4 rounded-2xl border-2 border-gray-100 hover:border-amber-200 hover:bg-amber-50/50 transition-all duration-200 cursor-pointer group"
+                                htmlFor={`${optionType}-${option.id}`}
+                                className="flex items-center space-x-3 p-3 sm:p-4 rounded-xl sm:rounded-2xl border-2 border-gray-100 hover:border-amber-200 hover:bg-amber-50/50 transition-all duration-200 cursor-pointer group active:scale-[0.98] min-h-[56px]"
                               >
                                 <RadioGroupItem
                                   value={option.id}
                                   id={`${optionType}-${option.id}`}
-                                  className="text-amber-600 border-2 border-gray-300 data-[state=checked]:border-amber-600 data-[state=checked]:bg-amber-600"
+                                  className="text-amber-600 border-2 border-gray-300 data-[state=checked]:border-amber-600 data-[state=checked]:bg-amber-600 h-5 w-5"
                                 />
-                                <Label
-                                  htmlFor={`${optionType}-${option.id}`}
-                                  className="flex-1 text-gray-800 font-medium cursor-pointer group-hover:text-amber-700 transition-colors"
-                                >
-                                  {option.name}
-                                </Label>
-                                {option.price > 0 && (
-                                  <span className="text-amber-600 font-semibold text-sm bg-amber-100 px-2 py-1 rounded-full">
-                                    +${option.price.toFixed(2)}
+                                <div className="flex-1 flex justify-between items-center min-w-0">
+                                  <span className="text-gray-800 font-medium cursor-pointer group-hover:text-amber-700 transition-colors text-sm sm:text-base">
+                                    {option.name}
                                   </span>
-                                )}
-                              </div>
+                                  {option.price > 0 && (
+                                    <span className="text-amber-600 font-semibold text-xs sm:text-sm bg-amber-100 px-2 py-1 rounded-full ml-2 flex-shrink-0">
+                                      +${option.price.toFixed(2)}
+                                    </span>
+                                  )}
+                                </div>
+                              </label>
                             ))}
                           </RadioGroup>
                         </div>
@@ -975,28 +992,28 @@ export default function Order() {
                     }
                   )
                 ) : (
-                  <div className="text-center py-8">
-                    <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <Coffee className="h-8 w-8 text-amber-600" />
+                  <div className="text-center py-6 sm:py-8">
+                    <div className="w-12 h-12 sm:w-16 sm:h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                      <Coffee className="h-6 w-6 sm:h-8 sm:w-8 text-amber-600" />
                     </div>
-                    <p className="text-gray-600 font-medium">
+                    <p className="text-gray-600 font-medium text-sm sm:text-base">
                       Ready to order as-is!
                     </p>
-                    <p className="text-gray-500 text-sm mt-1">
+                    <p className="text-gray-500 text-xs sm:text-sm mt-1">
                       No customization needed for this item.
                     </p>
                   </div>
                 )}
 
                 {/* Special Instructions */}
-                <div className="space-y-3">
-                  <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                    <div className="w-1 h-6 bg-gradient-to-b from-amber-500 to-amber-600 rounded-full" />
+                <div className="space-y-2 sm:space-y-3">
+                  <h3 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center gap-2">
+                    <div className="w-1 h-5 sm:h-6 bg-gradient-to-b from-amber-500 to-amber-600 rounded-full" />
                     Special Instructions
                   </h3>
                   <div className="relative">
                     <textarea
-                      className="w-full p-4 rounded-2xl border-2 border-gray-100 focus:border-amber-300 focus:ring-0 focus:outline-none resize-none transition-colors bg-gray-50/50 hover:bg-white hover:border-gray-200"
+                      className="w-full p-3 sm:p-4 rounded-xl sm:rounded-2xl border-2 border-gray-100 focus:border-amber-300 focus:ring-0 focus:outline-none resize-none transition-colors bg-gray-50/50 hover:bg-white hover:border-gray-200 text-sm sm:text-base"
                       placeholder="Any special requests? (e.g., extra hot, light foam, etc.)"
                       rows={3}
                       value={selectedItem.notes || ""}
@@ -1007,7 +1024,7 @@ export default function Order() {
                         });
                       }}
                     />
-                    <div className="absolute bottom-3 right-3 text-xs text-gray-400">
+                    <div className="absolute bottom-2 right-2 text-xs text-gray-400">
                       {(selectedItem.notes || "").length}/150
                     </div>
                   </div>
@@ -1015,20 +1032,20 @@ export default function Order() {
               </div>
             </div>
 
-            {/* Footer */}
-            <div className="p-6 bg-gray-50/50 border-t border-gray-100">
-              <div className="flex items-center justify-between mb-4">
+            {/* Fixed Footer - Always visible and properly sized */}
+            <div className="flex-shrink-0 p-3 sm:p-4 bg-gray-50/50 border-t border-gray-100">
+              <div className="flex items-center justify-between mb-3 sm:mb-4">
                 <div>
-                  <p className="text-sm text-gray-600 font-medium">
+                  <p className="text-xs sm:text-sm text-gray-600 font-medium">
                     Total Price
                   </p>
-                  <p className="text-3xl font-bold text-gray-900">
+                  <p className="text-xl sm:text-2xl font-bold text-gray-900">
                     ${Number(selectedItem.price).toFixed(2)}
                   </p>
                 </div>
                 <div className="text-right">
                   <p className="text-xs text-gray-500">Tax included</p>
-                  <p className="text-sm text-amber-600 font-medium">
+                  <p className="text-xs sm:text-sm text-amber-600 font-medium">
                     Ready in 5-10 min
                   </p>
                 </div>
@@ -1039,15 +1056,15 @@ export default function Order() {
                   addToCart(selectedItem, selectedItem.selectedOptions)
                 }
                 disabled={!allOptionsSelected}
-                className={`w-full h-14 rounded-2xl font-semibold text-lg transition-all duration-300 ${
+                className={`w-full h-12 sm:h-14 rounded-xl sm:rounded-2xl font-semibold text-base sm:text-lg transition-all duration-300 ${
                   allOptionsSelected
-                    ? "bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                    ? "bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 active:scale-[0.98]"
                     : "bg-gray-200 text-gray-500 cursor-not-allowed"
                 }`}
               >
                 {allOptionsSelected ? (
                   <span className="flex items-center gap-2">
-                    <Plus className="h-5 w-5" />
+                    <Plus className="h-4 w-4 sm:h-5 sm:w-5" />
                     Add to Cart
                   </span>
                 ) : (
