@@ -453,7 +453,7 @@ export default function Order() {
     <div className="min-h-screen bg-amber-50 pb-20 font-sans">
       <style jsx>{customStyles}</style>
       {/* Header */}
-      <header className="sticky top-0 z-10 bg-amber-800 text-white p-4 shadow-md">
+      <header className="sticky top-0 z-50 bg-amber-800 text-white p-4 shadow-md">
         <div className="container mx-auto flex justify-between items-center">
           <div className="flex items-center gap-2">
             <div className="bg-white p-2 rounded-full">
@@ -623,11 +623,11 @@ export default function Order() {
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-4">
+      <main className="container mx-auto px-4 pt-2 pb-4">
         {/* Category Tabs - Responsive and scrollable */}
         <div className="mb-6">
           <Tabs value={selectedCategory} onValueChange={setSelectedCategory}>
-            <div className="sticky top-16 bg-amber-50 pb-3 z-[5]">
+            <div className="sticky top-[72px] bg-amber-50 pb-3 pt-2 z-40 -mx-4 px-4">
               {/* Dynamic tab layout based on category count */}
               {categories.length <= 4 ? (
                 // Grid layout for 4 or fewer categories
@@ -701,7 +701,7 @@ export default function Order() {
               <TabsContent
                 key={category.id}
                 value={category.id}
-                className="mt-4"
+                className="mt-6"
               >
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                   {menuItems
