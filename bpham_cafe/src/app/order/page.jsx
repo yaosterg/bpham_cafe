@@ -623,7 +623,7 @@ export default function Order() {
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 pt-2 pb-4">
+      <main className="container mx-auto px-4 pt-4 pb-4">
         {/* Category Tabs - Responsive and scrollable */}
         <div className="mb-6">
           <Tabs value={selectedCategory} onValueChange={setSelectedCategory}>
@@ -701,9 +701,9 @@ export default function Order() {
               <TabsContent
                 key={category.id}
                 value={category.id}
-                className="mt-6"
+                className="mt-4"
               >
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pt-2">
                   {menuItems
                     .filter((item) => item.categoryId === category.id)
                     .map((item) => {
@@ -931,7 +931,7 @@ export default function Order() {
       {/* Customization Modal - Completely redesigned to fit all screen sizes */}
       {selectedItem && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50 p-2 sm:p-4">
-          <div className="bg-white w-full max-w-lg max-h-[96vh] sm:max-h-[90vh] rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl border-0 animate-in fade-in-0 zoom-in-95 duration-300 flex flex-col">
+          <div className="bg-white w-full max-w-lg h-[96vh] sm:h-[90vh] rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl border-0 animate-in fade-in-0 zoom-in-95 duration-300 flex flex-col">
             {/* Header with Image - Responsive sizing */}
             <div className="relative flex-shrink-0">
               <div className="h-32 sm:h-40 w-full overflow-hidden bg-gradient-to-br from-amber-100 via-amber-200 to-orange-200">
@@ -967,7 +967,7 @@ export default function Order() {
             </div>
 
             {/* Scrollable Content - Optimized for small screens */}
-            <div className="flex-1 overflow-y-auto p-3 sm:p-4">
+            <div className="flex-1 overflow-y-auto p-3 sm:p-4 min-h-0">
               <div className="space-y-4 sm:space-y-6">
                 {/* Options */}
                 {selectedItem.options &&
