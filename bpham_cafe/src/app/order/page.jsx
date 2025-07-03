@@ -55,6 +55,13 @@ const customStyles = `
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
 `;
 
 export default function Order() {
@@ -617,30 +624,77 @@ export default function Order() {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-4">
-        {/* Category Tabs - Made more mobile-friendly */}
+        {/* Category Tabs - Responsive and scrollable */}
         <div className="mb-6">
           <Tabs value={selectedCategory} onValueChange={setSelectedCategory}>
             <div className="sticky top-16 bg-amber-50 pb-3 z-[5]">
-              <TabsList className="w-full bg-amber-100 p-1 grid grid-cols-4 gap-1 h-auto">
-                {categories.map((category) => (
-                  <TabsTrigger
-                    key={category.id}
-                    value={category.id}
-                    className="flex flex-col items-center gap-1 p-3 text-xs data-[state=active]:bg-white data-[state=active]:text-amber-800 rounded-md"
-                  >
-                    {category.category === "Bakery" ? (
-                      <ConciergeBell className="h-4 w-4" />
-                    ) : category.category === "Signature Latte" ? (
-                      <CupSoda className="h-4 w-4" />
-                    ) : category.category === "Classic Latte" ? (
-                      <Coffee className="h-4 w-4" />
-                    ) : (
-                      <Feather className="h-4 w-4" />
-                    )}
-                    <span className="leading-tight">{category.category}</span>
-                  </TabsTrigger>
-                ))}
-              </TabsList>
+              {/* Dynamic tab layout based on category count */}
+              {categories.length <= 4 ? (
+                // Grid layout for 4 or fewer categories
+                <TabsList
+                  className={`w-full bg-amber-100 p-1 gap-1 h-auto ${
+                    categories.length === 1
+                      ? "grid grid-cols-1"
+                      : categories.length === 2
+                      ? "grid grid-cols-2"
+                      : categories.length === 3
+                      ? "grid grid-cols-3"
+                      : "grid grid-cols-4"
+                  }`}
+                >
+                  {categories.map((category) => (
+                    <TabsTrigger
+                      key={category.id}
+                      value={category.id}
+                      className="flex flex-col items-center gap-1 p-3 text-xs data-[state=active]:bg-white data-[state=active]:text-amber-800 rounded-md min-h-[60px] justify-center"
+                    >
+                      {category.category === "Bakery" ? (
+                        <ConciergeBell className="h-4 w-4" />
+                      ) : category.category === "Signature Latte" ? (
+                        <CupSoda className="h-4 w-4" />
+                      ) : category.category === "Classic Latte" ? (
+                        <Coffee className="h-4 w-4" />
+                      ) : (
+                        <Feather className="h-4 w-4" />
+                      )}
+                      <span className="leading-tight text-center">
+                        {category.category}
+                      </span>
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              ) : (
+                // Horizontal scrollable layout for more than 4 categories
+                <div className="relative">
+                  <div className="overflow-x-auto scrollbar-hide">
+                    <TabsList className="inline-flex bg-amber-100 p-1 gap-2 h-auto min-w-full">
+                      {categories.map((category) => (
+                        <TabsTrigger
+                          key={category.id}
+                          value={category.id}
+                          className="flex flex-col items-center gap-1 p-3 text-xs data-[state=active]:bg-white data-[state=active]:text-amber-800 rounded-md min-w-[80px] min-h-[60px] justify-center whitespace-nowrap flex-shrink-0"
+                        >
+                          {category.category === "Bakery" ? (
+                            <ConciergeBell className="h-4 w-4" />
+                          ) : category.category === "Signature Latte" ? (
+                            <CupSoda className="h-4 w-4" />
+                          ) : category.category === "Classic Latte" ? (
+                            <Coffee className="h-4 w-4" />
+                          ) : (
+                            <Feather className="h-4 w-4" />
+                          )}
+                          <span className="leading-tight text-center">
+                            {category.category}
+                          </span>
+                        </TabsTrigger>
+                      ))}
+                    </TabsList>
+                  </div>
+                  {/* Scroll indicators */}
+                  <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-amber-50 to-transparent pointer-events-none" />
+                  <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-amber-50 to-transparent pointer-events-none" />
+                </div>
+              )}
             </div>
 
             {categories.map((category) => (
@@ -661,12 +715,12 @@ export default function Order() {
                           key={item.id}
                           className="overflow-hidden hover:shadow-xl transition-all duration-500 rounded-2xl border-0 bg-white shadow-lg hover:scale-[1.02] group relative"
                         >
-                          {/* Image Container - Made much taller for portrait photos */}
-                          <div className="relative h-80 w-full overflow-hidden bg-gradient-to-br from-amber-100 to-amber-200">
+                          {/* Image Container - Even taller for better portrait display */}
+                          <div className="relative h-96 w-full overflow-hidden bg-gradient-to-br from-amber-100 to-amber-200">
                             <img
                               src={
                                 item.imageURL ||
-                                "/placeholder.svg?height=320&width=400" ||
+                                "/placeholder.svg?height=384&width=400" ||
                                 "/placeholder.svg"
                               }
                               alt={item.name}
