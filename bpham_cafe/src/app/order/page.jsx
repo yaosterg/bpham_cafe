@@ -270,7 +270,7 @@ export default function Order() {
               Welcome to BP.HAM Popup#2
             </h1>
             <p className="text-amber-700 mt-5 text-center">
-              Please remember to fill out your surveries.
+              Please remember to fill out your survey!
             </p>
           </div>
           <form onSubmit={handleNameSubmit} className="space-y-4">

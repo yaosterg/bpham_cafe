@@ -3,6 +3,8 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 export async function POST(req) {
+  const timeNow = new Date();
+  console.log("Current Time:", timeNow);
   try {
     const formData = await req.json();
     const newOrder = await prisma.order.update({
@@ -11,6 +13,7 @@ export async function POST(req) {
         completedStatus: true,
       },
     });
+    console.log("Order Completed:", newOrder);
 
     const allNewOrders = await prisma.order.findMany();
     return new Response(

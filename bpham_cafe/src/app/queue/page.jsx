@@ -46,6 +46,19 @@ function formatElapsedTime(created) {
   return `${hours}h ${minutes}m ago`;
 }
 
+function formatFinishTime(created, finished) {
+  const createdTime = new Date(created);
+  const finishedTime = new Date(finished);
+  const diffInMinutes = Math.floor((finishedTime - createdTime) / (1000 * 60));
+
+  if (diffInMinutes < 1) return "Just now";
+  if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
+
+  const hours = Math.floor(diffInMinutes / 60);
+  const minutes = diffInMinutes % 60;
+  return `${hours}h ${minutes}m ago`;
+}
+
 function OrderCard({ order, drinks, bakery, onDelete, onComplete }) {
   const [elapsedTime, setElapsedTime] = useState(
     formatElapsedTime(order.created)
@@ -83,10 +96,26 @@ function OrderCard({ order, drinks, bakery, onDelete, onComplete }) {
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Clock className="h-3 w-3" />
           <span>Created: {new Date(order.created).toLocaleTimeString()}</span>
-          <Separator orientation="vertical" className="h-3" />
-          <span className="text-red-500 font-medium">
-            Elapsed: {elapsedTime}
-          </span>
+          {order.completedStatus ? (
+            <>
+              {" "}
+              <Separator orientation="vertical" className="h-3" />
+              <span>
+                Completed: {new Date(order.completed).toLocaleTimeString()}
+              </span>
+              <Separator orientation="vertical" className="h-3" />
+              <span className="text-red-500 font-medium">
+                Total Time: {formatFinishTime(order.created, order.completed)}
+              </span>
+            </>
+          ) : (
+            <>
+              <Separator orientation="vertical" className="h-3" />
+              <span className="text-red-500 font-medium">
+                Elapsed: {elapsedTime}
+              </span>
+            </>
+          )}
         </div>
       </CardHeader>
 
