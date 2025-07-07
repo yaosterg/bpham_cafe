@@ -716,7 +716,7 @@ export default function Order() {
                           className="overflow-hidden hover:shadow-xl transition-all duration-500 rounded-2xl border-0 bg-white shadow-lg hover:scale-[1.02] group relative"
                         >
                           {/* Image Container - Even taller for better portrait display */}
-                          <div className="relative h-96 w-full overflow-hidden bg-gradient-to-br from-amber-100 to-amber-200">
+                          <div className="relative h-98 w-full overflow-hidden bg-gradient-to-br from-amber-100 to-amber-200">
                             <img
                               src={
                                 item.imageURL ||
