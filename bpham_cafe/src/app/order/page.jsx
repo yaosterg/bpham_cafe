@@ -436,7 +436,7 @@ export default function Order() {
         (!selectedItem.selectedOptions?.Temperature ||
           !selectedItem.selectedOptions?.Milk ||
           selectedItem.selectedOptions?.Temperature !== "cold" ||
-          selectedItem.selectedOptions?.Milk !== "regular")
+          selectedItem.selectedOptions?.Milk !== "whole")
       ) {
         // Foam is not relevant, so skip requiring it
         return true;
@@ -983,7 +983,7 @@ export default function Order() {
                           !selectedItem.selectedOptions?.Milk || // no milk chosen
                           selectedItem.selectedOptions?.Temperature !==
                             "cold" || // not Cold
-                          selectedItem.selectedOptions?.Milk !== "regular") // not Dairy
+                          selectedItem.selectedOptions?.Milk !== "whole") // not Dairy
                       ) {
                         return null;
                       }

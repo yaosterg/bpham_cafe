@@ -678,17 +678,15 @@ export default function CategoryItems({
                               options: {
                                 ...prev.options,
                                 Milk: [
-                                  { id: "regular", name: "Regular" },
-                                  { id: "lactaid", name: "Lactaid" },
+                                  { id: "whole", name: "Whole" },
                                   { id: "oat", name: "Oat" },
-                                  { id: "almond", name: "Almond" },
                                 ],
                               },
                             };
                           }
                         });
                       }}
-                      label="Milk Options (Regular/Lactaid/Oat/Almond):"
+                      label="Milk Options (Whole/Oat):"
                     />
                   </div>
                   {"Temperature" in formData.options &&

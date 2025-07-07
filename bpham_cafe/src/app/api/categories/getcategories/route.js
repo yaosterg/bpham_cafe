@@ -5,7 +5,7 @@ const prisma = new PrismaClient();
 export async function GET(req) {
   try {
     const allCategories = await prisma.category.findMany({
-      orderBy: { category: "asc" },
+      orderBy: { category: "desc" },
     });
 
     return new Response(
