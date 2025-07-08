@@ -639,6 +639,33 @@ export default function CategoryItems({
                   {/* Options Section */}
                   <div className="p-4 bg-white rounded-xl border border-[#d1c5b5] shadow-sm">
                     <ToggleSwitch
+                      checked={"Decaf" in (formData.options ?? {})}
+                      onChange={() => {
+                        setFormData((prev) => {
+                          if ("Decaf" in prev.options) {
+                            // Remove 'Milk' key
+                            const { Decaf, ...rest } = prev.options;
+                            return { ...prev, options: rest };
+                          } else {
+                            // Add 'Decaf' key with fixed object
+                            return {
+                              ...prev,
+                              options: {
+                                ...prev.options,
+                                Decaf: [
+                                  { id: "Decaf", name: "Decaf" },
+                                  { id: "Non decaf", name: "Non Decaf" },
+                                ],
+                              },
+                            };
+                          }
+                        });
+                      }}
+                      label="Milk Options (Whole/Oat):"
+                    />
+                  </div>
+                  <div className="p-4 bg-white rounded-xl border border-[#d1c5b5] shadow-sm">
+                    <ToggleSwitch
                       checked={"Temperature" in (formData.options ?? {})}
                       onChange={() => {
                         setFormData((prev) => {
