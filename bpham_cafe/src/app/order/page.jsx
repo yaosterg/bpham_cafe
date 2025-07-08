@@ -522,17 +522,20 @@ export default function Order() {
                           key={item.uniqueId}
                           className="flex py-4 border-b border-amber-200 hover:bg-amber-100/50 rounded-lg px-2 transition-colors"
                         >
-                          <div className="h-12 w-12 rounded-md overflow-hidden mr-3 flex-shrink-0 border border-amber-200">
-                            <img
-                              src={
-                                item.imageURL ||
-                                "/placeholder.svg?height=48&width=48" ||
-                                "/placeholder.svg"
-                              }
-                              alt={item.name}
-                              className="h-full w-full object-cover"
-                            />
-                          </div>
+                          {item.categoryId !== 25 ? (
+                            <div className="h-12 w-12 rounded-md overflow-hidden mr-3 flex-shrink-0 border border-amber-200">
+                              <img
+                                src={
+                                  item.imageURL ||
+                                  "/placeholder.svg?height=48&width=48" ||
+                                  "/placeholder.svg"
+                                }
+                                alt={item.name}
+                                className="h-full w-full object-cover"
+                              />
+                            </div>
+                          ) : null}
+
                           <div className="flex-1 min-w-0">
                             <h3 className="font-medium text-amber-900 text-sm">
                               {item.name}
@@ -716,16 +719,20 @@ export default function Order() {
                           className="overflow-hidden hover:shadow-xl transition-all duration-500 rounded-2xl border-0 bg-white shadow-lg hover:scale-[1.02] group relative"
                         >
                           {/* Image Container - Even taller for better portrait display */}
+
                           <div className="relative h-98 w-full overflow-hidden bg-gradient-to-br from-amber-100 to-amber-200">
-                            <img
-                              src={
-                                item.imageURL ||
-                                "/placeholder.svg?height=384&width=400" ||
-                                "/placeholder.svg"
-                              }
-                              alt={item.name}
-                              className="h-full w-full object-cover object-center transition-transform duration-700 group-hover:scale-110"
-                            />
+                            {item.categoryId !== 25 && (
+                              <img
+                                src={
+                                  item.imageURL ||
+                                  "/placeholder.svg?height=384&width=400" ||
+                                  "/placeholder.svg"
+                                }
+                                alt={item.name}
+                                className="h-full w-full object-cover object-center transition-transform duration-700 group-hover:scale-110"
+                              />
+                            )}
+
                             {/* Gradient overlay */}
                             <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
@@ -935,15 +942,18 @@ export default function Order() {
             {/* Header with Image - Responsive sizing */}
             <div className="relative flex-shrink-0">
               <div className="h-32 sm:h-40 w-full overflow-hidden bg-gradient-to-br from-amber-100 via-amber-200 to-orange-200">
-                <img
-                  src={
-                    selectedItem.imageURL ||
-                    "/placeholder.svg?height=160&width=400" ||
-                    "/placeholder.svg"
-                  }
-                  alt={selectedItem.name}
-                  className="h-full w-full object-cover"
-                />
+                {selectedItem.categoryId !== 25 && (
+                  <img
+                    src={
+                      selectedItem.imageURL ||
+                      "/placeholder.svg?height=160&width=400" ||
+                      "/placeholder.svg"
+                    }
+                    alt={selectedItem.name}
+                    className="h-full w-full object-cover"
+                  />
+                )}
+
                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
               </div>
 
