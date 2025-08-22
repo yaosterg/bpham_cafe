@@ -721,17 +721,18 @@ export default function Order() {
                           {/* Image Container - Even taller for better portrait display */}
 
                           <div className="relative h-98 w-full overflow-hidden bg-gradient-to-br from-amber-100 to-amber-200">
-                            {item.categoryId !== 25 && (
-                              <img
-                                src={
-                                  item.imageURL ||
-                                  "/placeholder.svg?height=384&width=400" ||
-                                  "/placeholder.svg"
-                                }
-                                alt={item.name}
-                                className="h-full w-full object-cover object-center transition-transform duration-700 group-hover:scale-110"
-                              />
-                            )}
+                            {item.categoryId !== 25 &&
+                              item.categoryId !== 32 && (
+                                <img
+                                  src={
+                                    item.imageURL ||
+                                    "/placeholder.svg?height=384&width=400" ||
+                                    "/placeholder.svg"
+                                  }
+                                  alt={item.name}
+                                  className="h-full w-full object-cover object-center transition-transform duration-700 group-hover:scale-110"
+                                />
+                              )}
 
                             {/* Gradient overlay */}
                             <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
